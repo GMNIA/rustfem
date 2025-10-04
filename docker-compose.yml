@@ -1,0 +1,59 @@
+x-rf-common: &rf
+  image: rustfem-dev:latest
+  build:
+    context: .
+  working_dir: /app
+  volumes:
+    - ./:/app:delegated
+    # keep one or both mounts; the build step below auto-detects which is used
+    - ./build:/build           # if you set CARGO_TARGET_DIR=/build
+    - ./target:/app/target     # Cargo default
+    - ./out:/out
+  tty: true
+  stdin_open: true
+
+services:
+  # Build (release) and mirror artifacts to ./out
+  build:
+    <<: *rf
+    command: |
+      bash -lc '
+        set -e
+        cargo build --workspace --release
+        mkdir -p /out
+        if [ -d "/build/release" ]; then
+          rm -rf /out/* && cp -a /build/release/. /out/
+        elif [ -d "/app/target/release" ]; then
+          rm -rf /out/* && cp -a /app/target/release/. /out/
+        else
+          echo "No release dir found; skipping copy."
+        fi
+      '
+
+  # Test whole workspace
+  test:
+    <<: *rf
+    command: bash -lc "cargo test --workspace"
+
+  # Fast type-check
+  check:
+    <<: *rf
+    command: bash -lc "cargo check --workspace"
+
+  # Interactive shell
+  shell:
+    <<: *rf
+    command: bash
+
+  # Example: run a binary crate named `cli`
+  # Pass args: docker compose run --rm -e ARGS="--help" run-cli
+  run-cli:
+    <<: *rf
+    environment:
+      - ARGS=
+    command: bash -lc 'cargo run -p cli --release -- "$$ARGS"'
+
+  # Clean artifacts
+  clean:
+    <<: *rf
+    command: bash -lc "cargo clean"

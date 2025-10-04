@@ -1,0 +1,13 @@
+# rustfem/Cargo.toml  (ROOT)
+[workspace]
+members = [
+    "crates/geometry",
+    "crates/structure",
+    "crates/fem",
+]
+resolver = "2"
+
+# (optional later)
+# [workspace.dependencies]
+# anyhow = "1"
+# thiserror = "1"
