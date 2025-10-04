@@ -1,2 +1,2 @@
 # rustfem
-Rust repository for polars and rust.
+Rust repository for fem structures made in rust, using the polars database.
