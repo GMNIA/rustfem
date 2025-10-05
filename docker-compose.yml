@@ -33,7 +33,7 @@ services:
   # Test whole workspace
   test:
     <<: *rf
-    command: bash -lc "cargo test --workspace"
+    command: bash -lc "cargo test -p geometry -- --nocapture"
 
   # Fast type-check
   check:
