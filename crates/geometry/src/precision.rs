@@ -22,7 +22,6 @@ pub fn approx_eq(left: f64, right: f64) -> bool {
 #[cfg(test)]
 /// Temporarily overrides the global epsilon within a scoped callback.
 pub(crate) fn with_epsilon<T>(value: f64, f: impl FnOnce() -> T) -> T {
-    // TODO: add a regression test that exercises panic paths once the test harness supports it.
     static GUARD: Mutex<()> = Mutex::new(());
     let _guard = GUARD.lock().unwrap();
 

@@ -1,8 +1,10 @@
+mod line;
 mod precision;
 mod vector;
 
 pub use precision::{approx_eq, epsilon, set_epsilon, DEFAULT_EPSILON};
 pub use vector::{Vector2d, Vector3d};
+pub use line::{Line, Line2d, Line3d};
 
 #[macro_export]
 macro_rules! assert_almost_eq {
