@@ -39,11 +39,11 @@ impl LineVector for Vector2d {
     }
 
     fn component_min(&self, other: &Self) -> Self {
-        Vector2d(self.0.zip_map(&other.0, |a, b| a.min(*b)))
+        Vector2d(self.0.zip_map(&other.0, |a, b| a.min(b)))
     }
 
     fn component_max(&self, other: &Self) -> Self {
-        Vector2d(self.0.zip_map(&other.0, |a, b| a.max(*b)))
+        Vector2d(self.0.zip_map(&other.0, |a, b| a.max(b)))
     }
 
     fn is_approx(&self, other: &Self, precision: Option<f64>) -> bool {
@@ -77,11 +77,11 @@ impl LineVector for Vector3d {
     }
 
     fn component_min(&self, other: &Self) -> Self {
-        Vector3d(self.0.zip_map(&other.0, |a, b| a.min(*b)))
+        Vector3d(self.0.zip_map(&other.0, |a, b| a.min(b)))
     }
 
     fn component_max(&self, other: &Self) -> Self {
-        Vector3d(self.0.zip_map(&other.0, |a, b| a.max(*b)))
+        Vector3d(self.0.zip_map(&other.0, |a, b| a.max(b)))
     }
 
     fn is_approx(&self, other: &Self, precision: Option<f64>) -> bool {

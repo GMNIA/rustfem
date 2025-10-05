@@ -1,4 +1,4 @@
-use geometry::{assert_almost_eq, epsilon, set_epsilon, Line2d, Line3d, Vector2d, Vector3d, DEFAULT_EPSILON};
+use geometry::{assert_almost_eq, epsilon, set_epsilon, Line2d, Line3d, Vector2d, Vector3d};
 
 #[test]
 fn line2d_basic_properties() {
@@ -136,7 +136,7 @@ fn break_at_out_of_range_returns_original() {
 #[test]
 fn ray_intersection_respects_direction() {
     let ray = Line2d::new(Vector2d::new(0.0, 0.0), Vector2d::new(5.0, 0.0));
-    let target = Line2d::new(Vector2d::new(10.0, -5.0), Vector2d::new(10.0, 5.0));
+    let target = Line2d::new(Vector2d::new(-5.0, -5.0), Vector2d::new(-5.0, 5.0));
     assert!(ray.ray_intersection(&target).is_none());
 
     let target2 = Line2d::new(Vector2d::new(3.0, -5.0), Vector2d::new(3.0, 5.0));
