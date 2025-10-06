@@ -1,8 +1,10 @@
 mod edge;
-mod line;
+mod arc;
+pub mod line;
 mod precision;
 mod vector;
 
+pub use arc::{Arc, Arc2d, Arc3d};
 pub use edge::{Edge, Edge2d, Edge3d};
 pub use precision::{approx_eq, epsilon, set_epsilon, DEFAULT_EPSILON};
 pub use vector::{Vector2d, Vector3d};
