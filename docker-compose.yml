@@ -33,6 +33,8 @@ services:
   # Test whole workspace
   test:
     <<: *rf
+    environment:
+      - RUST_BACKTRACE=full
     command: bash -lc "cargo test -p geometry -- --nocapture"
 
   # Fast type-check

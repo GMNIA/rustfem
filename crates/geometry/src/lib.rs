@@ -8,7 +8,7 @@ pub use arc::{Arc, Arc2d, Arc3d};
 pub use edge::{Edge, Edge2d, Edge3d};
 pub use precision::{approx_eq, epsilon, set_epsilon, DEFAULT_EPSILON};
 pub use vector::{Vector2d, Vector3d};
-pub use line::{Line, Line2d, Line3d};
+pub use line::{Axis, LocalAxis, Line, Line3d};
 
 #[macro_export]
 macro_rules! assert_almost_eq {

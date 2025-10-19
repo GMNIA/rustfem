@@ -1,4 +1,4 @@
-use geometry::{assert_almost_eq, Edge2d, Edge3d, Line2d, Vector2d, Vector3d};
+use geometry::{assert_almost_eq, Edge2d, Edge3d, Vector2d, Vector3d};
 
 #[test]
 fn edge2d_basic_behaviour() {
@@ -14,8 +14,10 @@ fn edge_break_and_intersection() {
     let edge = Edge2d::new(Vector2d::new(0.0, 0.0), Vector2d::new(4.0, 4.0));
     let parts = edge.break_at(0.5);
     assert_eq!(parts.len(), 2);
-    let diag = Line2d::new(Vector2d::new(0.0, 4.0), Vector2d::new(4.0, 0.0));
-    let hit = edge.intersection_with_line(&diag, false).unwrap();
+    // Use a 3D edge to test intersection with a 3D line
+    let edge3 = Edge3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(4.0, 4.0, 0.0));
+    let diag = geometry::Line3d::new(Vector3d::new(0.0, 4.0, 0.0), Vector3d::new(4.0, 0.0, 0.0));
+    let hit = edge3.intersection_with_line(&geometry::Line3d::new(Vector3d::new(0.0, 4.0, 0.0), Vector3d::new(4.0, 0.0, 0.0)), false).unwrap();
     assert_almost_eq!(hit.x(), 2.0);
 }
 

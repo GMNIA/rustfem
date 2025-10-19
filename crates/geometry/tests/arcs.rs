@@ -1,5 +1,4 @@
-use geometry::{assert_almost_eq, Arc2d, Arc3d, Line2d, Line3d, Vector2d, Vector3d};
-use geometry::line::LineVector;
+use geometry::{assert_almost_eq, Arc2d, Arc3d, Line3d, Vector2d, Vector3d};
 use std::f64::consts::PI;
 
 #[test]
@@ -34,8 +33,13 @@ fn arc_point_at_and_tangents() {
 
 #[test]
 fn arc_line_intersection_filters_points_on_arc() {
-    let arc = Arc2d::new(Vector2d::new(0.0, 0.0), Vector2d::new(1.0, 0.0), Vector2d::new(0.0, 1.0), false);
-    let line = Line2d::new(Vector2d::new(0.0, 0.5), Vector2d::new(1.0, 0.5));
+    let arc = Arc3d::new(
+        Vector3d::new(0.0, 0.0, 0.0),
+        Vector3d::new(1.0, 0.0, 0.0),
+        Vector3d::new(0.0, 1.0, 0.0),
+        false,
+    );
+    let line = Line3d::new(Vector3d::new(0.0, 0.5, 0.0), Vector3d::new(1.0, 0.5, 0.0));
     let intersections = arc.intersection_with_line(&line, false);
     assert_eq!(intersections.len(), 1);
     assert!(arc.contains(&intersections[0]));
@@ -74,7 +78,8 @@ fn arc3d_contains_points_on_z_plane() {
     assert!(arc.contains(&arc.end()));
     assert!(arc.contains(&mid));
 
-    let outside_radius = Vector3d::new(mid.x(), mid.y(), 0.0).normalize().scale(1.2);
+    let unit = Vector3d::new(mid.x(), mid.y(), 0.0).normalize();
+    let outside_radius = Vector3d::new(unit.x() * 1.2, unit.y() * 1.2, unit.z() * 1.2);
     assert!(!arc.contains(&outside_radius));
 
     let off_plane = Vector3d::new(mid.x(), mid.y(), 0.1);
@@ -83,6 +88,7 @@ fn arc3d_contains_points_on_z_plane() {
 
 #[test]
 fn arc3d_contains_points_on_3d_plane_manually_input() {
+    // Manually calculated arc in the plane defined by (0,0,0), (-1,0,-1), (0,1,1) from another source
     let arc = Arc3d::new(
         Vector3d::new(0.0, 0.0, 0.0),
         Vector3d::new(-1., 0.0, -1.0),
