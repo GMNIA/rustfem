@@ -4,11 +4,13 @@ pub mod line;
 mod precision;
 mod vector;
 
-pub use arc::{Arc, Arc2d, Arc3d};
-pub use edge::{Edge, Edge2d, Edge3d};
+// Public API: expose 3D types as canonical names; 2D inputs auto-promote to z=0
+pub use arc::Arc3d as Arc;
+pub use edge::Edge3d as Edge;
 pub use precision::{approx_eq, epsilon, set_epsilon, DEFAULT_EPSILON};
 pub use vector::{Vector2d, Vector3d};
-pub use line::{Axis, LocalAxis, Line, Line3d};
+pub use line::{Axis, LocalAxis, Line3d};
+pub use line::Line3d as Line;
 
 #[macro_export]
 macro_rules! assert_almost_eq {

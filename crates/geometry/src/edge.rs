@@ -18,19 +18,29 @@ impl<V> Edge<V>
 where
     V: LineVector,
 {
-    pub fn new(start: V, end: V) -> Self {
+    pub fn new<S, E>(start: S, end: E) -> Self
+    where
+        S: Into<V>,
+        E: Into<V>,
+    {
         Self {
-            line: Line::new(start, end),
+            line: Line::new(start.into(), end.into()),
             start_tangent: None,
             end_tangent: None,
         }
     }
 
-    pub fn with_tangents(start: V, end: V, start_tangent: V, end_tangent: V) -> Self {
+    pub fn with_tangents<S, E, T1, T2>(start: S, end: E, start_tangent: T1, end_tangent: T2) -> Self
+    where
+        S: Into<V>,
+        E: Into<V>,
+        T1: Into<V>,
+        T2: Into<V>,
+    {
         Self {
-            line: Line::new(start, end),
-            start_tangent: Some(start_tangent),
-            end_tangent: Some(end_tangent),
+            line: Line::new(start.into(), end.into()),
+            start_tangent: Some(start_tangent.into()),
+            end_tangent: Some(end_tangent.into()),
         }
     }
 

@@ -67,6 +67,12 @@ impl Vector3d {
     }
 }
 
+impl From<Vector2d> for Vector3d {
+    fn from(v: Vector2d) -> Self {
+        Vector3d::new(v.x(), v.y(), 0.0)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -1,8 +1,8 @@
-use geometry::{assert_almost_eq, epsilon, set_epsilon, Axis, Line3d, Vector3d};
+use geometry::{assert_almost_eq, epsilon, set_epsilon, Axis, Line, Vector3d};
 
 #[test]
 fn line2d_basic_properties() {
-    let line = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(4.0, 0.0, 0.0));
+    let line = Line::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(4.0, 0.0, 0.0));
     assert_almost_eq!(line.length(), 4.0);
     let dir = line.direction().unwrap();
     assert_almost_eq!(dir.x(), 1.0);
@@ -15,7 +15,7 @@ fn line2d_basic_properties() {
 
 #[test]
 fn line3d_distance_and_projection() {
-    let line = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(0.0, 0.0, 10.0));
+    let line = Line::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(0.0, 0.0, 10.0));
     let point = Vector3d::new(1.0, 0.0, 5.0);
     assert_almost_eq!(line.distance(&point), 1.0);
     let projection = line.projection(&point);
@@ -25,7 +25,7 @@ fn line3d_distance_and_projection() {
 
 #[test]
 fn line_break_and_reverse() {
-    let line = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(2.0, 0.0, 0.0));
+    let line = Line::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(2.0, 0.0, 0.0));
     let segments = line.break_at(0.5);
     assert_eq!(segments.len(), 2);
     assert_almost_eq!(segments[0].length(), 1.0);
@@ -41,14 +41,14 @@ fn line_break_and_reverse() {
 
 #[test]
 fn intersection_behaviour() {
-    let a = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(4.0, 4.0, 0.0));
-    let b = Line3d::new(Vector3d::new(4.0, 0.0, 0.0), Vector3d::new(0.0, 4.0, 0.0));
+    let a = Line::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(4.0, 4.0, 0.0));
+    let b = Line::new(Vector3d::new(4.0, 0.0, 0.0), Vector3d::new(0.0, 4.0, 0.0));
     let point = a.intersection(&b, false).unwrap();
     assert_almost_eq!(point.x(), 2.0);
     assert_almost_eq!(point.y(), 2.0);
 
-    let c = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(0.0, 0.0, 5.0));
-    let d = Line3d::new(Vector3d::new(1.0, 0.0, 0.0), Vector3d::new(1.0, 0.0, 5.0));
+    let c = Line::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(0.0, 0.0, 5.0));
+    let d = Line::new(Vector3d::new(1.0, 0.0, 0.0), Vector3d::new(1.0, 0.0, 5.0));
     assert!(c.intersection(&d, false).is_none());
 }
 
@@ -56,14 +56,14 @@ fn intersection_behaviour() {
 fn epsilon_respected_in_lines() {
     let original = epsilon();
     set_epsilon(1e-6);
-    let line = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(1e-7, 0.0, 0.0));
+    let line = Line::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(1e-7, 0.0, 0.0));
     assert!(line.direction().is_none());
     set_epsilon(original);
 }
 
 #[test]
 fn contains_and_point_parameter() {
-    let line = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(10.0, 0.0, 0.0));
+    let line = Line::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(10.0, 0.0, 0.0));
     let point = Vector3d::new(3.0, 0.0, 0.0);
     assert!(line.contains(&point));
     assert_almost_eq!(line.point_parameter(&point).unwrap(), 0.3);
@@ -74,7 +74,7 @@ fn contains_and_point_parameter() {
 
 #[test]
 fn length_at_point_matches_parameter() {
-    let line = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(0.0, 0.0, 10.0));
+    let line = Line::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(0.0, 0.0, 10.0));
     let point = Vector3d::new(0.0, 0.0, 4.0);
     assert_almost_eq!(line.length_at_point(&point), 4.0);
 }
@@ -83,14 +83,14 @@ fn length_at_point_matches_parameter() {
 fn start_and_end_accessors() {
     let start = Vector3d::new(1.0, 2.0, 3.0);
     let end = Vector3d::new(4.0, 5.0, 6.0);
-    let line = Line3d::new(start, end);
+    let line = Line::new(start, end);
     assert_eq!(line.start(), start);
     assert_eq!(line.end(), end);
 }
 
 #[test]
 fn point_at_supports_extrapolation() {
-    let line = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(2.0, 0.0, 0.0));
+    let line = Line::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(2.0, 0.0, 0.0));
     let midpoint = line.point_at(0.5);
     assert_almost_eq!(midpoint.x(), 1.0);
     let beyond = line.point_at(1.5);
@@ -99,7 +99,7 @@ fn point_at_supports_extrapolation() {
 
 #[test]
 fn break_at_point_splits_line() {
-    let line = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(0.0, 0.0, 10.0));
+    let line = Line::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(0.0, 0.0, 10.0));
     let split_point = Vector3d::new(0.0, 0.0, 2.5);
     let segments = line.break_at_point(&split_point);
     assert_eq!(segments.len(), 2);
@@ -109,7 +109,7 @@ fn break_at_point_splits_line() {
 
 #[test]
 fn move_start_and_end_mutate_line() {
-    let mut line = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(1.0, 0.0, 0.0));
+    let mut line = Line::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(1.0, 0.0, 0.0));
     line.move_start(Vector3d::new(-1.0, 0.0, 0.0));
     line.move_end(Vector3d::new(2.0, 0.0, 0.0));
     assert_almost_eq!(line.start().x(), -1.0);
@@ -119,7 +119,7 @@ fn move_start_and_end_mutate_line() {
 
 #[test]
 fn reversed_returns_new_line_without_mutating_original() {
-    let line = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(3.0, 0.0, 0.0));
+    let line = Line::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(3.0, 0.0, 0.0));
     let reversed = line.reversed();
     assert_almost_eq!(reversed.start().x(), 3.0);
     assert_almost_eq!(reversed.end().x(), 0.0);
@@ -128,7 +128,7 @@ fn reversed_returns_new_line_without_mutating_original() {
 
 #[test]
 fn break_at_out_of_range_returns_original() {
-    let line = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(5.0, 0.0, 0.0));
+    let line = Line::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(5.0, 0.0, 0.0));
     let segments = line.break_at(1.5);
     assert_eq!(segments.len(), 1);
     assert_almost_eq!(segments[0].length(), 5.0);
@@ -136,11 +136,11 @@ fn break_at_out_of_range_returns_original() {
 
 #[test]
 fn ray_intersection_respects_direction() {
-    let ray = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(5.0, 0.0, 0.0));
-    let target = Line3d::new(Vector3d::new(-5.0, -5.0, 0.0), Vector3d::new(-5.0, 5.0, 0.0));
+    let ray = Line::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(5.0, 0.0, 0.0));
+    let target = Line::new(Vector3d::new(-5.0, -5.0, 0.0), Vector3d::new(-5.0, 5.0, 0.0));
     assert!(ray.ray_intersection(&target).is_none());
 
-    let target2 = Line3d::new(Vector3d::new(3.0, -5.0, 0.0), Vector3d::new(3.0, 5.0, 0.0));
+    let target2 = Line::new(Vector3d::new(3.0, -5.0, 0.0), Vector3d::new(3.0, 5.0, 0.0));
     let hit = ray.ray_intersection(&target2).unwrap();
     assert_almost_eq!(hit.x(), 3.0);
     assert_almost_eq!(hit.y(), 0.0);
@@ -150,7 +150,7 @@ fn ray_intersection_respects_direction() {
 fn local_axis_reference_line() {
     // --- Line 1 (high-precision reference) ---
     {
-        let line = Line3d::new(
+    let line = Line::new(
             Vector3d::new(8.8629468830558018, 0.6063292911286204, 3.2383809849393881),
             Vector3d::new(-8.8641849571395177, 8.3974564436718744, -7.9913375830590061),
         );
@@ -200,7 +200,7 @@ fn local_axis_reference_line() {
 
     // --- Line 2 ---
     {
-        let line = Line3d::new(
+    let line = Line::new(
             Vector3d::new(1.1189342017367565, -4.2728003376401702, 7.5108053223579638),
             Vector3d::new(8.3014985983509817, -4.9081710844533504, -3.5880289464723329),
         );
@@ -236,7 +236,7 @@ fn local_axis_reference_line() {
 
     // --- Line 3 ---
     {
-        let line = Line3d::new(
+    let line = Line::new(
             Vector3d::new(3.7752716375722013, 2.8449661881000345, 0.8204574523201025),
             Vector3d::new(1.7781941993246075, 0.7192455642656554, -9.3092961795041234),
         );
@@ -272,7 +272,7 @@ fn local_axis_reference_line() {
 
     // --- Line 4 ---
     {
-        let line = Line3d::new(
+    let line = Line::new(
             Vector3d::new(-3.5479024223149018, 6.6570262685284050, 8.6987877100447548),
             Vector3d::new(-1.4357545231405915, 7.7310136703640744, 2.8683323851624678),
         );
@@ -308,7 +308,7 @@ fn local_axis_reference_line() {
 
     // --- Line 5 ---
     {
-        let line = Line3d::new(
+    let line = Line::new(
             Vector3d::new(1.3383693014975826, -6.6151707468404330, -2.4873158375691196),
             Vector3d::new(0.3479043630687570, -9.5794875264221417, -8.5266996049192514),
         );

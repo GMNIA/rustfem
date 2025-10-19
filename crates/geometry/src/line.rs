@@ -104,8 +104,12 @@ impl<V> Line<V>
 where
     V: LineVector,
 {
-    pub fn new(start: V, end: V) -> Self {
-        Self { start, end }
+    pub fn new<S, E>(start: S, end: E) -> Self
+    where
+        S: Into<V>,
+        E: Into<V>,
+    {
+        Self { start: start.into(), end: end.into() }
     }
 
     pub fn start(&self) -> V {
@@ -410,7 +414,7 @@ mod tests {
     #[test]
     fn line_length_and_direction_2d() {
         // 3D equivalent of the classic 2D test with z = 0
-        let line = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(3.0, 4.0, 0.0));
+    let line = Line::<Vector3d>::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(3.0, 4.0, 0.0));
         assert_almost_eq!(line.length(), 5.0);
         let dir = line.direction().expect("direction defined");
         assert_almost_eq!(dir.x(), 0.6);
@@ -420,7 +424,7 @@ mod tests {
 
     #[test]
     fn midpoint_and_point_at() {
-        let line = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(2.0, 2.0, 2.0));
+    let line = Line::<Vector3d>::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(2.0, 2.0, 2.0));
         let midpoint = line.midpoint();
         assert_almost_eq!(midpoint.x(), 1.0);
         assert_almost_eq!(midpoint.y(), 1.0);
@@ -434,7 +438,7 @@ mod tests {
 
     #[test]
     fn closest_point_and_distance() {
-        let line = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(10.0, 0.0, 0.0));
+    let line = Line::<Vector3d>::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(10.0, 0.0, 0.0));
         let point = Vector3d::new(5.0, 3.0, 0.0);
         let closest = line.closest_point(&point);
         assert_almost_eq!(closest.x(), 5.0);
@@ -445,8 +449,8 @@ mod tests {
 
     #[test]
     fn intersection_segments() {
-        let a = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(4.0, 4.0, 0.0));
-        let b = Line3d::new(Vector3d::new(0.0, 4.0, 0.0), Vector3d::new(4.0, 0.0, 0.0));
+    let a = Line::<Vector3d>::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(4.0, 4.0, 0.0));
+    let b = Line::<Vector3d>::new(Vector3d::new(0.0, 4.0, 0.0), Vector3d::new(4.0, 0.0, 0.0));
         let intersection = a.intersection(&b, false).expect("segments intersect");
         assert_almost_eq!(intersection.x(), 2.0);
         assert_almost_eq!(intersection.y(), 2.0);
@@ -455,14 +459,14 @@ mod tests {
 
     #[test]
     fn intersection_parallel_returns_none() {
-        let a = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(4.0, 0.0, 0.0));
-        let b = Line3d::new(Vector3d::new(0.0, 1.0, 0.0), Vector3d::new(4.0, 1.0, 0.0));
+    let a = Line::<Vector3d>::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(4.0, 0.0, 0.0));
+    let b = Line::<Vector3d>::new(Vector3d::new(0.0, 1.0, 0.0), Vector3d::new(4.0, 1.0, 0.0));
         assert!(a.intersection(&b, false).is_none());
     }
 
     #[test]
     fn break_at_parameter() {
-        let line = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(0.0, 0.0, 10.0));
+    let line = Line::<Vector3d>::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(0.0, 0.0, 10.0));
         let pieces = line.break_at(0.5);
         assert_eq!(pieces.len(), 2);
         assert_almost_eq!(pieces[0].length(), 5.0);
@@ -471,7 +475,7 @@ mod tests {
 
     #[test]
     fn contains_and_length_at_point() {
-        let line = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(0.0, 0.0, 10.0));
+    let line = Line::<Vector3d>::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(0.0, 0.0, 10.0));
         let point = Vector3d::new(0.0, 0.0, 7.5);
         assert!(line.contains(&point));
         assert_almost_eq!(line.length_at_point(&point), 7.5);
@@ -479,10 +483,10 @@ mod tests {
 
     #[test]
     fn ray_intersection_requires_forward_parameters() {
-        let a = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(5.0, 0.0, 0.0));
-        let b = Line3d::new(Vector3d::new(10.0, 0.0, 0.0), Vector3d::new(15.0, 0.0, 0.0));
+    let a = Line::<Vector3d>::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(5.0, 0.0, 0.0));
+    let b = Line::<Vector3d>::new(Vector3d::new(10.0, 0.0, 0.0), Vector3d::new(15.0, 0.0, 0.0));
         assert!(a.ray_intersection(&b).is_none());
-        let c = Line3d::new(Vector3d::new(5.0, -5.0, 0.0), Vector3d::new(5.0, 5.0, 0.0));
+    let c = Line::<Vector3d>::new(Vector3d::new(5.0, -5.0, 0.0), Vector3d::new(5.0, 5.0, 0.0));
         let intersection = a.ray_intersection(&c).expect("rays meet");
         assert_almost_eq!(intersection.x(), 5.0);
         assert_almost_eq!(intersection.y(), 0.0);
@@ -492,7 +496,7 @@ mod tests {
     #[test]
     fn contains_handles_degenerate_line() {
         let point = Vector3d::new(1.0, 1.0, 0.0);
-        let line = Line3d::new(point, point);
+    let line = Line::<Vector3d>::new(point, point);
         assert!(line.contains(&point));
         assert!(line.contains(&Vector3d::new(1.0 + DEFAULT_EPSILON / 2.0, 1.0, 0.0)));
     }
@@ -505,7 +509,7 @@ mod tests {
         assert_almost_eq!(Axis::AxisZ.to_vector3d().z(), 1.0);
 
         // Line axis: X should align with tangent
-        let line = Line3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(1.0, 0.0, 0.0));
+    let line = Line::<Vector3d>::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(1.0, 0.0, 0.0));
         let ax = line.axis(Axis::AxisX).expect("axis available");
         assert_almost_eq!(ax.x(), 1.0);
         assert_almost_eq!(ax.y(), 0.0);
@@ -515,7 +519,7 @@ mod tests {
     #[test]
     fn local_axis_canonical_lines_match_reference() {
         // lineX = Line([0,0,0], [1,0,0])
-        let line_x = Line3d::new(
+    let line_x = Line::<Vector3d>::new(
             Vector3d::new(0.0, 0.0, 0.0),
             Vector3d::new(1.0, 0.0, 0.0),
         );
@@ -534,7 +538,7 @@ mod tests {
         assert_almost_eq!(rot_x[(0,2)], 0.0); assert_almost_eq!(rot_x[(1,2)], 0.0); assert_almost_eq!(rot_x[(2,2)], 1.0);
 
         // lineY = Line([0,0,0], [0,1,0])
-        let line_y = Line3d::new(
+    let line_y = Line::<Vector3d>::new(
             Vector3d::new(0.0, 0.0, 0.0),
             Vector3d::new(0.0, 1.0, 0.0),
         );
@@ -557,7 +561,7 @@ mod tests {
         assert_almost_eq!(rot_y[(0,2)], 0.0);  assert_almost_eq!(rot_y[(1,2)], 0.0);  assert_almost_eq!(rot_y[(2,2)], 1.0);
 
         // lineZ = Line([0,0,0], [0,0,1])
-        let line_z = Line3d::new(
+    let line_z = Line::<Vector3d>::new(
             Vector3d::new(0.0, 0.0, 0.0),
             Vector3d::new(0.0, 0.0, 1.0),
         );

@@ -50,7 +50,16 @@ impl<V> Arc<V>
 where
     V: ArcVector,
 {
-    pub fn new(center: V, start: V, end: V, clockwise: bool) -> Self {
+    pub fn new<C, S, E>(center: C, start: S, end: E, clockwise: bool) -> Self
+    where
+        C: Into<V>,
+        S: Into<V>,
+        E: Into<V>,
+    {
+        let center: V = center.into();
+        let start: V = start.into();
+        let end: V = end.into();
+
         let start_vec = start.sub(&center);
         let end_vec = end.sub(&center);
 
@@ -104,17 +113,18 @@ where
 
         normal = normal.normalize();
 
-        Self {
-            center,
-            start,
-            end,
-            normal,
-            sweep,
-            radius,
-        }
+        Self { center, start, end, normal, sweep, radius }
     }
 
-    pub fn from_three_points(p1: V, p2: V, p3: V) -> Option<Self> {
+    pub fn from_three_points<P1, P2, P3>(p1: P1, p2: P2, p3: P3) -> Option<Self>
+    where
+        P1: Into<V>,
+        P2: Into<V>,
+        P3: Into<V>,
+    {
+        let p1: V = p1.into();
+        let p2: V = p2.into();
+        let p3: V = p3.into();
         let p1_vec = p1.to_vec3();
         let p2_vec = p2.to_vec3();
         let p3_vec = p3.to_vec3();

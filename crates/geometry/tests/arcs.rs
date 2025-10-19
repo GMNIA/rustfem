@@ -1,17 +1,18 @@
-use geometry::{assert_almost_eq, Arc2d, Arc3d, Line3d, Vector2d, Vector3d};
+use geometry::{assert_almost_eq, Arc, Line, Vector2d, Vector3d};
 use std::f64::consts::PI;
 
 #[test]
 fn arc2d_basic_properties() {
-    let arc = Arc2d::new(Vector2d::new(0.0, 0.0), Vector2d::new(1.0, 0.0), Vector2d::new(0.0, 1.0), false);
+    let arc = Arc::new(Vector2d::new(0.0, 0.0), Vector2d::new(1.0, 0.0), Vector2d::new(0.0, 1.0), false);
     assert_almost_eq!(arc.radius(), 1.0);
-    assert!(arc.contains(&Vector2d::new((2.0f64).sqrt() / 2.0, (2.0f64).sqrt() / 2.0)));
+    let p = Vector3d::from(Vector2d::new((2.0f64).sqrt() / 2.0, (2.0f64).sqrt() / 2.0));
+    assert!(arc.contains(&p));
     assert_almost_eq!(arc.length(), PI / 2.0);
 }
 
 #[test]
 fn arc_break_and_reverse_behaviour() {
-    let arc = Arc3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(1.0, 0.0, 0.0), Vector3d::new(0.0, 1.0, 0.0), false);
+    let arc = Arc::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(1.0, 0.0, 0.0), Vector3d::new(0.0, 1.0, 0.0), false);
     let pieces = arc.break_at(0.5);
     assert_eq!(pieces.len(), 2);
     assert_almost_eq!(pieces[0].length(), arc.length() / 2.0);
@@ -22,7 +23,7 @@ fn arc_break_and_reverse_behaviour() {
 
 #[test]
 fn arc_point_at_and_tangents() {
-    let arc = Arc2d::new(Vector2d::new(0.0, 0.0), Vector2d::new(1.0, 0.0), Vector2d::new(0.0, 1.0), false);
+    let arc = Arc::new(Vector2d::new(0.0, 0.0), Vector2d::new(1.0, 0.0), Vector2d::new(0.0, 1.0), false);
     let mid = arc.point_at(0.5);
     assert_almost_eq!(mid.x(), (2.0f64).sqrt() / 2.0);
     assert_almost_eq!(mid.y(), (2.0f64).sqrt() / 2.0);
@@ -33,13 +34,13 @@ fn arc_point_at_and_tangents() {
 
 #[test]
 fn arc_line_intersection_filters_points_on_arc() {
-    let arc = Arc3d::new(
+    let arc = Arc::new(
         Vector3d::new(0.0, 0.0, 0.0),
         Vector3d::new(1.0, 0.0, 0.0),
         Vector3d::new(0.0, 1.0, 0.0),
         false,
     );
-    let line = Line3d::new(Vector3d::new(0.0, 0.5, 0.0), Vector3d::new(1.0, 0.5, 0.0));
+    let line = Line::new(Vector3d::new(0.0, 0.5, 0.0), Vector3d::new(1.0, 0.5, 0.0));
     let intersections = arc.intersection_with_line(&line, false);
     assert_eq!(intersections.len(), 1);
     assert!(arc.contains(&intersections[0]));
@@ -50,14 +51,15 @@ fn arc_from_three_points_recovers_arc() {
     let p1 = Vector2d::new(1.0, 0.0);
     let p2 = Vector2d::new((2.0f64).sqrt() / 2.0, (2.0f64).sqrt() / 2.0);
     let p3 = Vector2d::new(0.0, 1.0);
-    let arc = Arc2d::from_three_points(p1, p2, p3).expect("valid arc");
-    assert!(arc.contains(&p2));
+    let arc = Arc::from_three_points(p1, p2, p3).expect("valid arc");
+    let p2_3d = Vector3d::from(p2);
+    assert!(arc.contains(&p2_3d));
     assert_almost_eq!(arc.length(), PI / 2.0);
 }
 
 #[test]
 fn arc_linearized_returns_segments() {
-    let arc = Arc2d::new(Vector2d::new(0.0, 0.0), Vector2d::new(1.0, 0.0), Vector2d::new(0.0, 1.0), false);
+    let arc = Arc::new(Vector2d::new(0.0, 0.0), Vector2d::new(1.0, 0.0), Vector2d::new(0.0, 1.0), false);
     let segments = arc.linearized(4);
     assert_eq!(segments.len(), 4);
     assert_almost_eq!(segments[0].start().x(), 1.0);
@@ -66,7 +68,7 @@ fn arc_linearized_returns_segments() {
 
 #[test]
 fn arc3d_contains_points_on_z_plane() {
-    let arc = Arc3d::new(
+    let arc = Arc::new(
         Vector3d::new(0.0, 0.0, 0.0),
         Vector3d::new(1.0, 0.0, 0.0),
         Vector3d::new(0.0, 1.0, 0.0),
@@ -89,7 +91,7 @@ fn arc3d_contains_points_on_z_plane() {
 #[test]
 fn arc3d_contains_points_on_3d_plane_manually_input() {
     // Manually calculated arc in the plane defined by (0,0,0), (-1,0,-1), (0,1,1) from another source
-    let arc = Arc3d::new(
+    let arc = Arc::new(
         Vector3d::new(0.0, 0.0, 0.0),
         Vector3d::new(-1., 0.0, -1.0),
         Vector3d::new(0.0, 1., 1.0),
@@ -105,13 +107,13 @@ fn arc3d_contains_points_on_3d_plane_manually_input() {
 
 #[test]
 fn arc3d_contains_respects_orientation() {
-    let clockwise_arc = Arc3d::new(
+    let clockwise_arc = Arc::new(
         Vector3d::new(0.0, 0.0, 0.0),
         Vector3d::new(1.0, 0.0, 0.0),
         Vector3d::new(0.0, 1.0, 0.0),
         true,
     );
-    let counter_arc = Arc3d::new(
+    let counter_arc = Arc::new(
         Vector3d::new(0.0, 0.0, 0.0),
         Vector3d::new(1.0, 0.0, 0.0),
         Vector3d::new(0.0, 1.0, 0.0),
@@ -129,7 +131,7 @@ fn arc3d_contains_respects_orientation() {
 
 #[test]
 fn arc3d_length_and_angle_at_point() {
-    let arc = Arc3d::new(
+    let arc = Arc::new(
         Vector3d::new(0.0, 0.0, 0.0),
         Vector3d::new(1.0, 0.0, 0.0),
         Vector3d::new(0.0, 1.0, 0.0),
@@ -143,13 +145,13 @@ fn arc3d_length_and_angle_at_point() {
 
 #[test]
 fn arc3d_intersection_with_line() {
-    let arc = Arc3d::new(
+    let arc = Arc::new(
         Vector3d::new(0.0, 0.0, 0.0),
         Vector3d::new(1.0, 0.0, 0.0),
         Vector3d::new(0.0, 1.0, 0.0),
         false,
     );
-    let line = Line3d::new(Vector3d::new(-1.0, 0.0, 0.0), Vector3d::new(2.0, 0.0, 0.0));
+    let line = Line::new(Vector3d::new(-1.0, 0.0, 0.0), Vector3d::new(2.0, 0.0, 0.0));
     let hits = arc.intersection_with_line(&line, false);
     assert_eq!(hits.len(), 1);
     assert!(arc.contains(&hits[0]));
@@ -159,13 +161,13 @@ fn arc3d_intersection_with_line() {
 
 #[test]
 fn arc3d_intersection_with_arc() {
-    let arc1 = Arc3d::new(
+    let arc1 = Arc::new(
         Vector3d::new(0.0, 0.0, 0.0),
         Vector3d::new(1.0, 0.0, 0.0),
         Vector3d::new(0.0, 1.0, 0.0),
         false,
     );
-    let arc2 = Arc3d::new(
+    let arc2 = Arc::new(
         Vector3d::new(0.5, 0.0, 0.0),
         Vector3d::new(0.5, -0.5, 0.0),
         Vector3d::new(0.5, 0.5, 0.0),
@@ -179,7 +181,7 @@ fn arc3d_intersection_with_arc() {
 
 #[test]
 fn arc3d_break_at_point() {
-    let arc = Arc3d::new(
+    let arc = Arc::new(
         Vector3d::new(0.0, 0.0, 0.0),
         Vector3d::new(1.0, 0.0, 0.0),
         Vector3d::new(0.0, 1.0, 0.0),
