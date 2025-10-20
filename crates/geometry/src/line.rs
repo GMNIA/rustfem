@@ -263,7 +263,7 @@ where
         }
 
     let mut s = (b * f - c * e) / denom;
-    let mut t = (a * f - b * c) / denom;
+    let t = (a * f - b * c) / denom;
 
         if !treat_as_ray {
             if s < -epsilon() || s > 1.0 + epsilon() || t < -epsilon() || t > 1.0 + epsilon() {
@@ -408,8 +408,7 @@ impl LocalAxis {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{assert_almost_eq, epsilon, DEFAULT_EPSILON};
-    use std::f64::consts::FRAC_1_SQRT_2;
+    use crate::{assert_almost_eq, DEFAULT_EPSILON};
 
     #[test]
     fn line_length_and_direction_2d() {

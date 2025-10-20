@@ -43,8 +43,7 @@ where
     radius: f64,
 }
 
-pub type Arc2d = Arc<Vector2d>;
-pub type Arc3d = Arc<Vector3d>;
+// Local 2D/3D aliases removed; crate root provides 3D public aliases instead.
 
 impl<V> Arc<V>
 where
@@ -466,7 +465,7 @@ mod tests {
 
     #[test]
     fn arc_length_matches_radius_times_angle() {
-        let arc = Arc2d::new(Vector2d::new(0.0, 0.0), Vector2d::new(1.0, 0.0), Vector2d::new(0.0, 1.0), false);
+    let arc = Arc::<Vector2d>::new(Vector2d::new(0.0, 0.0), Vector2d::new(1.0, 0.0), Vector2d::new(0.0, 1.0), false);
         assert_almost_eq!(arc.radius(), 1.0);
         assert_almost_eq!(arc.angle(), PI / 2.0);
         assert_almost_eq!(arc.length(), PI / 2.0);
@@ -474,7 +473,7 @@ mod tests {
 
     #[test]
     fn arc_point_at_and_contains() {
-        let arc = Arc2d::new(Vector2d::new(0.0, 0.0), Vector2d::new(1.0, 0.0), Vector2d::new(0.0, 1.0), false);
+    let arc = Arc::<Vector2d>::new(Vector2d::new(0.0, 0.0), Vector2d::new(1.0, 0.0), Vector2d::new(0.0, 1.0), false);
         let mid = arc.point_at(0.5);
         assert!(arc.contains(&mid));
         assert_almost_eq!(mid.x(), (2.0f64).sqrt() / 2.0);
@@ -483,7 +482,7 @@ mod tests {
 
     #[test]
     fn arc_reverse_swaps_start_end() {
-        let mut arc = Arc2d::new(Vector2d::new(0.0, 0.0), Vector2d::new(1.0, 0.0), Vector2d::new(0.0, 1.0), false);
+    let mut arc = Arc::<Vector2d>::new(Vector2d::new(0.0, 0.0), Vector2d::new(1.0, 0.0), Vector2d::new(0.0, 1.0), false);
         let reversed = arc.reversed();
         assert_eq!(reversed.start(), arc.end());
         assert_eq!(reversed.end(), arc.start());
@@ -493,7 +492,7 @@ mod tests {
 
     #[test]
     fn arc_break_at_splits_arc() {
-        let arc = Arc3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(1.0, 0.0, 0.0), Vector3d::new(0.0, 1.0, 0.0), false);
+    let arc = Arc::<Vector3d>::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(1.0, 0.0, 0.0), Vector3d::new(0.0, 1.0, 0.0), false);
         let parts = arc.break_at(0.5);
         assert_eq!(parts.len(), 2);
         assert_almost_eq!(parts[0].length(), arc.length() / 2.0);

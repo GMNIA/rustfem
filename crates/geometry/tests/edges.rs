@@ -16,7 +16,7 @@ fn edge_break_and_intersection() {
     assert_eq!(parts.len(), 2);
     // Use a 3D edge to test intersection with a 3D line
     let edge3 = Edge::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(4.0, 4.0, 0.0));
-    let diag = geometry::Line::new(Vector3d::new(0.0, 4.0, 0.0), Vector3d::new(4.0, 0.0, 0.0));
+    let _diag = geometry::Line::new(Vector3d::new(0.0, 4.0, 0.0), Vector3d::new(4.0, 0.0, 0.0));
     let hit = edge3.intersection_with_line(&geometry::Line::new(Vector3d::new(0.0, 4.0, 0.0), Vector3d::new(4.0, 0.0, 0.0)), false).unwrap();
     assert_almost_eq!(hit.x(), 2.0);
 }

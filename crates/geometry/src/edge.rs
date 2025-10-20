@@ -1,5 +1,7 @@
 use crate::line::{Line, LineVector};
-use crate::{epsilon, Vector2d, Vector3d};
+use crate::epsilon;
+#[cfg(test)]
+use crate::{Vector2d, Vector3d};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Edge<V>
@@ -11,8 +13,8 @@ where
     end_tangent: Option<V>,
 }
 
-pub type Edge2d = Edge<Vector2d>;
-pub type Edge3d = Edge<Vector3d>;
+// Note: 3D public aliases are provided at crate root; avoid local 2D/3D aliases to
+// reduce dead code and keep the crate focused on 3D public API.
 
 impl<V> Edge<V>
 where
@@ -151,7 +153,7 @@ mod tests {
 
     #[test]
     fn edge_length_and_point_at() {
-        let edge = Edge2d::new(Vector2d::new(0.0, 0.0), Vector2d::new(4.0, 0.0));
+    let edge = Edge::<Vector2d>::new(Vector2d::new(0.0, 0.0), Vector2d::new(4.0, 0.0));
         assert_almost_eq!(edge.length(), 4.0);
         let midpoint = edge.point_at(0.5);
         assert_almost_eq!(midpoint.x(), 2.0);
@@ -160,7 +162,7 @@ mod tests {
 
     #[test]
     fn edge_break_and_reverse() {
-        let edge = Edge3d::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(0.0, 0.0, 10.0));
+    let edge = Edge::<Vector3d>::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(0.0, 0.0, 10.0));
         let segments = edge.break_at(0.25);
         assert_eq!(segments.len(), 2);
         assert_almost_eq!(segments[0].length(), 2.5);
@@ -176,7 +178,7 @@ mod tests {
 
     #[test]
     fn edge_intersection_with_line() {
-        let edge = Edge2d::new(Vector2d::new(0.0, 0.0), Vector2d::new(4.0, 4.0));
+    let edge = Edge::<Vector2d>::new(Vector2d::new(0.0, 0.0), Vector2d::new(4.0, 4.0));
         let line = Line::new(Vector2d::new(0.0, 4.0), Vector2d::new(4.0, 0.0));
         let intersection = edge.intersection_with_line(&line, false).unwrap();
         assert_almost_eq!(intersection.x(), 2.0);
@@ -184,7 +186,7 @@ mod tests {
 
     #[test]
     fn edge_contains_and_closest_point() {
-        let edge = Edge2d::new(Vector2d::new(0.0, 0.0), Vector2d::new(10.0, 0.0));
+    let edge = Edge::<Vector2d>::new(Vector2d::new(0.0, 0.0), Vector2d::new(10.0, 0.0));
         let point = Vector2d::new(5.0, 2.0);
         let closest = edge.closest_point(&point);
         assert_almost_eq!(closest.x(), 5.0);

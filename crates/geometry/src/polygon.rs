@@ -2,7 +2,9 @@ use nalgebra::{Matrix2, Matrix3, Vector2, Vector3};
 
 use crate::arc::ArcVector;
 use crate::line::{Axis, Line, LocalAxis};
-use crate::{epsilon, Vector2d, Vector3d};
+use crate::{epsilon, Vector3d};
+#[cfg(test)]
+use crate::Vector2d;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Polygon<V>
@@ -18,8 +20,7 @@ where
     perimeter: f64,
 }
 
-pub type Polygon2d = Polygon<Vector2d>;
-pub type Polygon3d = Polygon<Vector3d>;
+// Local 2D/3D aliases removed; the crate root exports canonical 3D names.
 
 impl<V> Polygon<V>
 where
@@ -80,7 +81,7 @@ where
 
         // Build local frame: ez = normal; ex = first edge projected to plane; ey = ez × ex
     let ez = normal;
-        let mut ex = {
+    let ex = {
             // Find first non-degenerate edge
             let mut ex_opt: Option<Vector3<f64>> = None;
             for i in 0..verts.len() {
@@ -121,7 +122,7 @@ where
             // Transform vertices to local frame using temporary origin at first vertex
             let origin0 = verts[0].to_vec3();
             let r_t = rotation.transpose();
-            let mut local: Vec<Vector3<f64>> = verts
+            let local: Vec<Vector3<f64>> = verts
                 .iter()
                 .map(|v| r_t * (v.to_vec3() - origin0))
                 .collect();
@@ -283,8 +284,7 @@ where
         let tr = a + c;
         let det = a * c - b * b;
         let disc = (tr * tr - 4.0 * det).max(0.0).sqrt();
-        let l1 = 0.5 * (tr + disc);
-        let l2 = 0.5 * (tr - disc);
+    let l1 = 0.5 * (tr + disc);
 
         // Eigenvector for l1: (b, l1 - a) unless near-zero
         let mut v1 = if b.abs() > epsilon() || (l1 - a).abs() > epsilon() {
@@ -509,7 +509,7 @@ where
                 if j == i || j == next_i || i == next_j || (i == 0 && j == n - 1) {
                     continue;
                 }
-                if let Some(p) = edges[i].intersection(&edges[j], false) {
+                if let Some(_p) = edges[i].intersection(&edges[j], false) {
                     // Ignore intersections exactly at non-shared endpoints (handled by adjacency skip)
                     // If we got here, it's a proper crossing
                     return true;
@@ -542,11 +542,12 @@ fn point_on_segment_2d(p: Vector3<f64>, a: Vector3<f64>, b: Vector3<f64>) -> boo
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{assert_almost_eq, Line, Polygon};
+    use crate::{assert_almost_eq, Line};
+    use crate::Polygon as Polygon3d;
 
     #[test]
     fn square_xy_basic_metrics_and_axes() {
-        let poly = Polygon::new([
+    let poly = Polygon3d::new([
             Vector2d::new(0.0, 0.0),
             Vector2d::new(1.0, 0.0),
             Vector2d::new(1.0, 1.0),
@@ -570,7 +571,7 @@ mod tests {
 
     #[test]
     fn contains_border_and_closest_point() {
-        let poly = Polygon::new([
+    let poly = Polygon3d::new([
             Vector2d::new(0.0, 0.0),
             Vector2d::new(2.0, 0.0),
             Vector2d::new(2.0, 1.0),
@@ -592,7 +593,7 @@ mod tests {
 
     #[test]
     fn line_intersection_through_center() {
-        let poly = Polygon::new([
+    let poly = Polygon3d::new([
             Vector2d::new(0.0, 0.0),
             Vector2d::new(1.0, 0.0),
             Vector2d::new(1.0, 1.0),
