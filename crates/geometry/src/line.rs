@@ -96,6 +96,8 @@ where
 {
     start: V,
     end: V,
+    // Optional orientation override stored as column-major rotation matrix.
+    orientation: Option<[f64; 9]>,
 }
 
 pub type Line3d = Line<Vector3d>;
@@ -109,7 +111,7 @@ where
         S: Into<V>,
         E: Into<V>,
     {
-        Self { start: start.into(), end: end.into() }
+        Self { start: start.into(), end: end.into(), orientation: None }
     }
 
     pub fn start(&self) -> V {
@@ -209,14 +211,17 @@ where
 
     pub fn move_start(&mut self, start: V) {
         self.start = start;
+        self.orientation = None;
     }
 
     pub fn move_end(&mut self, end: V) {
         self.end = end;
+        self.orientation = None;
     }
 
     pub fn reverse(&mut self) {
         std::mem::swap(&mut self.start, &mut self.end);
+        self.orientation = None;
     }
 
     pub fn reversed(&self) -> Self {
@@ -298,6 +303,10 @@ impl Line<Vector3d> {
     pub fn rotation_matrix(&self) -> Option<nalgebra::Matrix3<f64>> {
         use nalgebra::{Matrix3, Vector3};
 
+        if let Some(stored) = self.orientation {
+            return Some(Matrix3::from_column_slice(&stored));
+        }
+
         let tangent = self.direction()?.0;
         let t_norm = tangent.norm();
         if t_norm <= epsilon() {
@@ -308,7 +317,7 @@ impl Line<Vector3d> {
         // Python logic compatibility:
         // Choose local Z axis so that it lies in the global XZ-plane (y=0) and is orthogonal to ex.
         // A robust way: use ez_raw = ex × (0,1,0). This always has y=0.
-        // Then set ez = -normalize(ez_raw) to match the sign used in the provided examples.
+        // Then normalize to get ez. The sign matches the reference outputs across our tests.
         let global_y = Vector3::new(0.0, 1.0, 0.0);
         let mut ez_raw = ex.cross(&global_y); // (ex.z, 0, -ex.x)
         let mut ez_norm = ez_raw.norm();
@@ -318,7 +327,7 @@ impl Line<Vector3d> {
             ez_raw = Vector3::new(0.0, 0.0, 1.0);
             ez_norm = 1.0;
         }
-    let ez = ez_raw / ez_norm;
+        let ez = ez_raw / ez_norm;
 
         // e_y to complete a right-handed basis: ex × ey = ez => choose ey = ez × ex
         let ey = ez.cross(&ex);
@@ -327,6 +336,34 @@ impl Line<Vector3d> {
     }
 
 // (2D uses the generic Line<V> intersection with relaxed tolerance in ray mode)
+    /// Rotate the local axis frame around a global-space axis vector that passes
+    /// through the line start point.
+    pub fn rotate(&mut self, angle: f64, axis: [f64; 3]) {
+        use nalgebra::{Matrix3, Rotation3, Unit, Vector3};
+
+        let base_mat: Matrix3<f64> = match self.rotation_matrix() {
+            Some(m) => m,
+            None => return,
+        };
+        let axis_vec = Vector3::new(axis[0], axis[1], axis[2]);
+        if axis_vec.norm_squared() <= epsilon() * epsilon() {
+            return;
+        }
+        let unit_axis = match Unit::try_new(axis_vec, epsilon()) {
+            Some(axis) => axis,
+            None => return,
+        };
+        let incremental = Rotation3::from_axis_angle(&unit_axis, angle);
+        let new_x = incremental * base_mat.column(0).into_owned();
+        let new_y = incremental * base_mat.column(1).into_owned();
+        let new_z = incremental * base_mat.column(2).into_owned();
+        let updated = Matrix3::from_columns(&[new_x, new_y, new_z]);
+
+        let mut stored = [0.0_f64; 9];
+        stored.copy_from_slice(updated.as_slice());
+        self.orientation = Some(stored);
+    }
+
     /// Converts a global-space point into the line's local coordinate frame where the
     /// origin lies at the line start and the X axis follows the tangent direction.
     pub fn to_local(&self, point: Vector3d) -> Option<Vector3d> {

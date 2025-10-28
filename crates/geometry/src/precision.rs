@@ -19,6 +19,7 @@ pub fn approx_eq(left: f64, right: f64) -> bool {
     (left - right).abs() <= epsilon()
 }
 
+
 #[cfg(test)]
 /// Temporarily overrides the global epsilon within a scoped callback.
 pub(crate) fn with_epsilon<T>(value: f64, f: impl FnOnce() -> T) -> T {

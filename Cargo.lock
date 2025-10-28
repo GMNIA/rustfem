@@ -286,6 +286,10 @@ dependencies = [
 [[package]]
 name = "structure"
 version = "0.1.0"
+dependencies = [
+ "geometry",
+ "nalgebra",
+]
 
 [[package]]
 name = "syn"
