@@ -54,12 +54,12 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn new(center: Vector3d, name: Option<String>) -> Self {
-        Self {
-            name,
-            center,
-            rotation: Rotation3::identity(),
-        }
+    fn from_parts(center: Vector3d, name: Option<String>) -> Self {
+        Self { name, center, rotation: Rotation3::identity() }
+    }
+
+    pub fn new<C: Into<Vector3d>>(center: C) -> Self {
+        Self::from_parts(center.into(), None)
     }
 
     pub fn name(&self) -> Option<&str> { self.name.as_deref() }
@@ -165,6 +165,54 @@ impl Node {
     }
 }
 
+impl From<Vector3d> for Node {
+    fn from(center: Vector3d) -> Self {
+        Node::from_parts(center, None)
+    }
+}
+
+impl From<[f64; 3]> for Node {
+    fn from(center: [f64; 3]) -> Self {
+        Node::from(Vector3d::from(center))
+    }
+}
+
+impl From<(f64, f64, f64)> for Node {
+    fn from(center: (f64, f64, f64)) -> Self {
+        Node::from(Vector3d::from(center))
+    }
+}
+
+impl<S> From<(Vector3d, S)> for Node
+where
+    S: Into<String>,
+{
+    fn from((center, name): (Vector3d, S)) -> Self {
+        let text = name.into();
+        let name = if text.is_empty() { None } else { Some(text) };
+        Node::from_parts(center, name)
+    }
+}
+
+impl<S> From<([f64; 3], S)> for Node
+where
+    S: Into<String>,
+{
+    fn from((center, name): ([f64; 3], S)) -> Self {
+        Node::from((Vector3d::from(center), name))
+    }
+}
+
+impl<S> From<((f64, f64, f64), S)> for Node
+where
+    S: Into<String>,
+{
+    fn from((center, name): ((f64, f64, f64), S)) -> Self {
+        Node::from((Vector3d::from(center), name))
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use geometry::{assert_vec3_almost_eq, Vector3d};
@@ -173,7 +221,7 @@ mod tests {
 
     #[test]
     fn coordinate_access_and_update() {
-        let mut node = Node::new(Vector3d::new(0.0, 0.0, 0.0), Some("origin".into()));
+        let mut node: Node = (Vector3d::new(0.0, 0.0, 0.0), "origin").into();
         assert_eq!(node.coord(0), 0.0);
         assert_eq!(node.coord(1), 0.0);
         node.set_coord(0, 1.0);
@@ -183,7 +231,7 @@ mod tests {
 
     #[test]
     fn local_global_roundtrip() {
-        let mut node = Node::new(Vector3d::new(1.0, 0.0, 0.0), Some("pivot".into()));
+        let mut node: Node = (Vector3d::new(1.0, 0.0, 0.0), "pivot").into();
         node.rotate(0.25);
 
         let local = Vector3d::new(0.5, -0.1, 0.0);
@@ -193,7 +241,7 @@ mod tests {
 
     #[test]
     fn rotate_and_move_updates_center() {
-        let mut node = Node::new(Vector3d::new(0.0, 0.0, 0.0), Some("moving".into()));
+        let mut node: Node = (Vector3d::new(0.0, 0.0, 0.0), "moving").into();
         node.rotate(0.15);
         node.move_by(Vector3d::new(0.28415734530715797, -0.16915514374573093, 0.0));
 
@@ -203,7 +251,7 @@ mod tests {
 
     #[test]
     fn direction_uses_rotation() {
-        let mut node = Node::new(Vector3d::new(0.0, 0.0, 0.0), Some("dir".into()));
+        let mut node: Node = (Vector3d::new(0.0, 0.0, 0.0), "dir").into();
         node.rotate(0.1);
         let dir = node.direction(Axis::AxisX);
         assert_vec3_almost_eq!(dir, Vector3d::new(0.9950041652780258, 0.09983341664682815, 0.0));

@@ -95,8 +95,8 @@ impl Member {
         S: Into<Vector3d>,
         E: Into<Vector3d>,
     {
-        let start_node = Node::new(start.into(), None);
-        let end_node = Node::new(end.into(), None);
+        let start_node = Node::new(start.into());
+        let end_node = Node::new(end.into());
         let mut member = Self::new(start_node, end_node);
         if let Some(section) = section {
             member.section = Some(section);
@@ -393,8 +393,8 @@ mod tests {
 
     #[test]
     fn member_direction_matches_node_difference() {
-        let start_node = Node::new(Vector3d::new(0.0, 0.0, 0.0), Some("N1".into()));
-        let end_node = Node::new(Vector3d::new(3.0, 4.0, 0.0), Some("N2".into()));
+        let start_node: Node = (Vector3d::new(0.0, 0.0, 0.0), "N1").into();
+        let end_node: Node = (Vector3d::new(3.0, 4.0, 0.0), "N2").into();
         let member = Member::new(start_node, end_node);
 
         assert_almost_eq!(member.length(), 5.0);
@@ -404,8 +404,8 @@ mod tests {
         let material = Material::new(210e9, 0.3, 8.0, 78.5, 1.2e-5, 0.2, None);
         let section = Section::generic(material, Some("WithSection".into()));
         let mut member_with_section = Member::new(
-            Node::new(Vector3d::new(0.0, 0.0, 0.0), Some("N1".into())),
-            Node::new(Vector3d::new(3.0, 4.0, 0.0), Some("N2".into())),
+            (Vector3d::new(0.0, 0.0, 0.0), "N1").into(),
+            (Vector3d::new(3.0, 4.0, 0.0), "N2").into(),
         );
         member_with_section.set_section(section);
         member_with_section.set_name("member_with_section");
@@ -420,8 +420,8 @@ mod tests {
     #[test]
     fn member_rotates_with_orientation_tracking() {
         let mut member = Member::new(
-            Node::new(Vector3d::new(0.0, 0.0, 0.0), None),
-            Node::new(Vector3d::new(1.0, 0.0, 0.0), None),
+            Node::new(Vector3d::new(0.0, 0.0, 0.0)),
+            Node::new(Vector3d::new(1.0, 0.0, 0.0)),
         );
         member.rotate(0.0, [0.0, 0.0, 1.0]);
         assert_vec3_almost_eq!(member.direction(Axis::AxisX), Vector3d::new(1.0, 0.0, 0.0));
@@ -430,8 +430,8 @@ mod tests {
         assert_almost_eq!(member.get_section_rotation_value(), 0.0);
 
         let mut member = Member::new(
-            Node::new(Vector3d::new(0.0, 0.0, 0.0), None),
-            Node::new(Vector3d::new(1.0, 0.0, 0.0), None),
+            Node::new(Vector3d::new(0.0, 0.0, 0.0)),
+            Node::new(Vector3d::new(1.0, 0.0, 0.0)),
         );
         let quarter_turn = std::f64::consts::FRAC_PI_2;
         member.rotate(quarter_turn, [0.0, 0.0, 1.0]);
@@ -441,8 +441,8 @@ mod tests {
         assert_almost_eq!(member.get_section_rotation_value(), 0.0);
 
         let mut member = Member::new(
-            Node::new(Vector3d::new(0.0, 0.0, 0.0), None),
-            Node::new(Vector3d::new(1.0, 0.0, 0.0), None),
+            Node::new(Vector3d::new(0.0, 0.0, 0.0)),
+            Node::new(Vector3d::new(1.0, 0.0, 0.0)),
         );
         member.rotate(quarter_turn, [1.0, 0.0, 0.0]);
         assert_vec3_almost_eq!(member.direction(Axis::AxisX), Vector3d::new(1.0, 0.0, 0.0));
@@ -453,8 +453,8 @@ mod tests {
         // With section present, section rotation can actually change.
         let material = Material::new(210e9, 0.3, 8.0, 78.5, 1.2e-5, 0.2, None);
         let section = Section::generic(material, None);
-        let start_node = Node::new(Vector3d::new(0.0, 0.0, 0.0), None);
-        let end_node = Node::new(Vector3d::new(1.0, 0.0, 0.0), None);
+        let start_node = Node::new(Vector3d::new(0.0, 0.0, 0.0));
+        let end_node = Node::new(Vector3d::new(1.0, 0.0, 0.0));
         let mut member: Member = (start_node, end_node, section).into();
         member.set_section_rotation(std::f64::consts::FRAC_PI_4);
         assert_almost_eq!(member.get_section_rotation_value(), std::f64::consts::FRAC_PI_4);

@@ -109,8 +109,8 @@ fn rotation_matrix_matches_expected_orientation() {
 #[test]
 fn move_updates_nodes_and_line() {
     let mut member = Member::new(
-        Node::new(Vector3d::new(0.0, 0.0, 0.0), None),
-        Node::new(Vector3d::new(1.0, 0.0, 0.0), None),
+        Node::new(Vector3d::new(0.0, 0.0, 0.0)),
+        Node::new(Vector3d::new(1.0, 0.0, 0.0)),
     );
 
     member.r#move([1.0, 0.0, 0.0]);
@@ -131,8 +131,8 @@ fn move_accepts_list_and_vector_inputs() {
     let original_start = Vector3d::new(0.0, 0.0, 0.0);
     let original_end = Vector3d::new(2.0, 0.0, 0.0);
     let mut member = Member::new(
-        Node::new(original_start, None),
-        Node::new(original_end, None),
+        Node::new(original_start),
+        Node::new(original_end),
     );
 
     member.r#move([0.5, 1.0, -0.5]);
@@ -147,8 +147,8 @@ fn move_accepts_list_and_vector_inputs() {
 #[test]
 fn rotate_refreshes_mesh_nodes_for_all_input_forms() {
     let mut member = Member::new(
-        Node::new(Vector3d::new(0.0, 0.0, 0.0), None),
-        Node::new(Vector3d::new(1.0, 0.0, 0.0), None),
+        Node::new(Vector3d::new(0.0, 0.0, 0.0)),
+        Node::new(Vector3d::new(1.0, 0.0, 0.0)),
     );
 
     member.rotate(0.0, [0.0, 0.0, 1.0]);
