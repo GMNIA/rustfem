@@ -146,8 +146,8 @@ mod tests {
         assert!(!section.is_principal());
         assert_eq!(section.area(), 0.0);
         assert_eq!(section.mass(), 0.0);
-        assert_eq!(section.parts(), &[]);
-        assert_eq!(section.section_values(), &[]);
+        assert!(section.parts().is_empty());
+        assert!(section.section_values().is_empty());
         assert_eq!(section.simplified(), Vec::<String>::new());
         assert_eq!(section.centroid(), Vector3d::new(0.0, 0.0, 0.0));
     }

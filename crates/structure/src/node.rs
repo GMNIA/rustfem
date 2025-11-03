@@ -1,9 +1,5 @@
-use geometry::{Axis, Vector3d};
+use geometry::{epsilon, Axis, Vector3d};
 use nalgebra::{Matrix3, Matrix4, Rotation3, Unit, Vector3};
-
-fn unit_z() -> Unit<Vector3<f64>> {
-    Unit::new_normalize(Vector3::new(0.0, 0.0, 1.0))
-}
 
 /// Axis-aligned bounding box helper used by structural entities.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -97,8 +93,20 @@ impl Node {
 
     /// Accumulate a rotation around the global Z axis.
     pub fn rotate(&mut self, angle: f64) {
-        let delta = Rotation3::from_axis_angle(&unit_z(), angle);
-        self.rotation = self.rotation * delta;
+        self.rotate_about_axis(angle, [0.0, 0.0, 1.0]);
+    }
+
+    /// Accumulate a rotation around an arbitrary axis expressed in global coordinates.
+    pub fn rotate_about_axis(&mut self, angle: f64, axis: [f64; 3]) {
+        let axis_vec = Vector3::new(axis[0], axis[1], axis[2]);
+        if let Some(unit_axis) = Unit::try_new(axis_vec, epsilon()) {
+            let rotation = Rotation3::from_axis_angle(&unit_axis, angle);
+            self.apply_rotation(&rotation);
+        }
+    }
+
+    pub fn apply_rotation(&mut self, rotation: &Rotation3<f64>) {
+        self.rotation = self.rotation * rotation;
     }
 
     /// Translate the node by a vector expressed in the node local coordinates.

@@ -335,6 +335,26 @@ impl Line<Vector3d> {
         Some(Matrix3::from_columns(&[ex, ey, ez]))
     }
 
+    pub fn r#move(&mut self, offset: Vector3d) {
+        self.start = self.start.add(&offset);
+        self.end = self.end.add(&offset);
+    }
+
+    pub fn set_orientation_matrix(&mut self, matrix: nalgebra::Matrix3<f64>) {
+        let mut stored = [0.0_f64; 9];
+        stored.copy_from_slice(matrix.as_slice());
+        self.orientation = Some(stored);
+    }
+
+    pub fn clear_orientation(&mut self) {
+        self.orientation = None;
+    }
+
+    pub fn set_endpoints(&mut self, start: Vector3d, end: Vector3d) {
+        self.start = start;
+        self.end = end;
+    }
+
 // (2D uses the generic Line<V> intersection with relaxed tolerance in ray mode)
     /// Rotate the local axis frame around a global-space axis vector that passes
     /// through the line start point.

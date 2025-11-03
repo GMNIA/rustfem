@@ -73,6 +73,18 @@ impl From<Vector2d> for Vector3d {
     }
 }
 
+impl From<[f64; 3]> for Vector3d {
+    fn from(values: [f64; 3]) -> Self {
+        Vector3d::new(values[0], values[1], values[2])
+    }
+}
+
+impl From<(f64, f64, f64)> for Vector3d {
+    fn from(values: (f64, f64, f64)) -> Self {
+        Vector3d::new(values.0, values.1, values.2)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
