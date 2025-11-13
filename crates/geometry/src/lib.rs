@@ -2,6 +2,7 @@ mod edge;
 mod arc;
 mod polygon;
 pub mod line;
+mod shape;
 mod precision;
 mod vector;
 
@@ -11,6 +12,7 @@ mod vector;
 pub type Arc = arc::Arc<Vector3d>;
 pub type Edge = edge::Edge<Vector3d>;
 pub type Polygon = polygon::Polygon<Vector3d>;
+pub use shape::{Disk, Rectangle, Shape, ShapeC, ShapeI, ShapeL, ShapeT};
 // Re-export precision helpers at the crate root so macros can reference `$crate::…`
 pub use precision::{approx_eq, epsilon, set_epsilon, DEFAULT_EPSILON};
 pub use vector::{Vector2d, Vector3d};

@@ -24,11 +24,20 @@ pub fn approx_eq(left: f64, right: f64) -> bool {
 /// Temporarily overrides the global epsilon within a scoped callback.
 pub(crate) fn with_epsilon<T>(value: f64, f: impl FnOnce() -> T) -> T {
     static GUARD: Mutex<()> = Mutex::new(());
-    let _guard = GUARD.lock().unwrap();
+    let _guard = GUARD.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+
+    struct RestoreEpsilon {
+        previous: f64,
+    }
+
+    impl Drop for RestoreEpsilon {
+        fn drop(&mut self) {
+            set_epsilon(self.previous);
+        }
+    }
 
     let original = epsilon();
+    let _restore = RestoreEpsilon { previous: original };
     set_epsilon(value);
-    let result = f();
-    set_epsilon(original);
-    result
+    f()
 }

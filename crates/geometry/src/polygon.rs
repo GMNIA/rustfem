@@ -1,4 +1,4 @@
-use nalgebra::{Matrix2, Matrix3, Vector2, Vector3};
+use nalgebra::{Matrix2, Matrix3, Vector3};
 
 use crate::arc::ArcVector;
 use crate::line::{Axis, Line, LocalAxis};
@@ -211,119 +211,72 @@ where
     }
 
     /// Compute the 2D second moment of area matrix in the polygon's local plane
-    /// about the centroid. Returns a 2x2 matrix [Ixx Ixy; Ixy Iyy] where axes are
-    /// the polygon's local X,Y (columns of `self.rotation`).
+    /// about the modeling origin (matching the Python reference behaviour). The
+    /// origin is the first provided vertex projected into the polygon plane. The
+    /// returned 2x2 matrix [Ixx Ixy; Ixy Iyy] is aligned with the polygon's local
+    /// X,Y axes (columns of `self.rotation`).
     pub fn local_second_moment_of_area(&self) -> Matrix2<f64> {
-        // Build local coordinates with an arbitrary origin (first vertex), then use
-        // parallel axis theorem to shift to centroid.
-        let r_t = self.rotation.transpose();
-        let origin0 = self.vertices[0].to_vec3();
-        let locals: Vec<Vector3<f64>> = self
-            .vertices
-            .iter()
-            .map(|v| r_t * (v.to_vec3() - origin0))
-            .collect();
-
-        // Compute area and centroid in this local frame (reuse algorithm)
-        let mut area2 = 0.0; // 2*A
-        let mut cx_num = 0.0;
-        let mut cy_num = 0.0;
-
-        let mut ix0_sum = 0.0; // about origin0
-        let mut iy0_sum = 0.0;
-        let mut ixy0_sum = 0.0;
-
-        for i in 0..locals.len() {
-            let p = locals[i];
-            let q = locals[(i + 1) % locals.len()];
-            let cross = p.x * q.y - q.x * p.y; // xi*yj - xj*yi
-            area2 += cross;
-            cx_num += (p.x + q.x) * cross;
-            cy_num += (p.y + q.y) * cross;
-
-            // Origin-based second moments for polygon
-            let yy = p.y * p.y + p.y * q.y + q.y * q.y;
-            let xx = p.x * p.x + p.x * q.x + q.x * q.x;
-            let xy = p.x * q.y + 2.0 * p.x * p.y + 2.0 * q.x * q.y + q.x * p.y;
-            ix0_sum += yy * cross; // Ixx about origin (integral of y^2)
-            iy0_sum += xx * cross; // Iyy about origin (integral of x^2)
-            ixy0_sum += xy * cross; // Ixy about origin (integral of x*y)
+        let mut inertia = self.centroidal_local_second_moment();
+        let area = self.area.abs();
+        if area <= epsilon() {
+            return inertia;
         }
+        let centroid_local = self.rotation.transpose() * self.centroid.to_vec3();
+        let cx = centroid_local.x;
+        let cy = centroid_local.y;
+        inertia[(0, 0)] += area * cy * cy;
+        inertia[(1, 1)] += area * cx * cx;
+        let shift = area * cx * cy;
+        inertia[(0, 1)] += shift;
+        inertia[(1, 0)] += shift;
+        inertia
+    }
 
-        let area = 0.5 * area2;
-        // Guard against degenerate area
-        if area.abs() <= epsilon() {
-            return Matrix2::zeros();
-        }
-
-        let cx = cx_num / (3.0 * area2);
-        let cy = cy_num / (3.0 * area2);
-
-        // Scale sums to get moments about origin
-        let ix0 = ix0_sum / 12.0;
-        let iy0 = iy0_sum / 12.0;
-        let ixy0 = ixy0_sum / 24.0;
-
-        // Central (about centroid) using parallel axis theorem
-        let ixx_c = ix0 - area * cy * cy;
-        let iyy_c = iy0 - area * cx * cx;
-        let ixy_c = ixy0 - area * cx * cy;
-
-        Matrix2::new(ixx_c, ixy_c, ixy_c, iyy_c)
+    /// Centroidal variant of the local second moment of area tensor.
+    pub fn centroidal_local_second_moment_of_area(&self) -> Matrix2<f64> {
+        self.centroidal_local_second_moment()
     }
 
     /// Local principal axes in the polygon plane as a 2x2 orthonormal matrix whose
     /// columns are eigenvectors of the local second moment matrix.
     pub fn local_principal_axes(&self) -> Matrix2<f64> {
-        let s = self.local_second_moment_of_area();
-        // Symmetric 2x2 -> closed-form eigenvectors
-        let a = s[(0, 0)];
-        let b = s[(0, 1)];
-        let c = s[(1, 1)];
-        // Compute eigenvalues
-        let tr = a + c;
-        let det = a * c - b * b;
-        let disc = (tr * tr - 4.0 * det).max(0.0).sqrt();
-    let l1 = 0.5 * (tr + disc);
+        let s = self.centroidal_local_second_moment_of_area();
+        let ixx = s[(0, 0)];
+        let iyy = s[(1, 1)];
+        let ixy = s[(0, 1)];
 
-        // Eigenvector for l1: (b, l1 - a) unless near-zero
-        let mut v1 = if b.abs() > epsilon() || (l1 - a).abs() > epsilon() {
-            Vector2::new(b, l1 - a)
-        } else {
-            // If nearly diagonal, choose axis with larger inertia as primary
-            if a >= c { Vector2::new(1.0, 0.0) } else { Vector2::new(0.0, 1.0) }
-        };
-        if v1.norm() <= epsilon() {
-            v1 = Vector2::new(1.0, 0.0);
+        if ixy.abs() <= epsilon() {
+            if ixx <= iyy {
+                return Matrix2::identity();
+            }
+            return Matrix2::new(0.0, 1.0, 1.0, 0.0);
         }
-        v1 /= v1.norm();
-        // v2 orthogonal to v1
-        let v2 = Vector2::new(-v1.y, v1.x);
-        Matrix2::from_columns(&[v1, v2])
+
+        let two_theta = (-2.0 * ixy).atan2(iyy - ixx);
+        let theta = 0.5 * two_theta;
+        let cos_t = theta.cos();
+        let sin_t = theta.sin();
+        Matrix2::new(cos_t, -sin_t, sin_t, cos_t)
     }
 
-    /// Global 3D second moment of area tensor at the centroid. Embeds the local 2D
-    /// tensor into 3D plate inertia form and rotates to global frame.
+    /// Global 3D second moment of area tensor about the modeling origin (first
+    /// vertex). This matches the Python bindings where the inertia is reported
+    /// before shifting to the centroid.
     pub fn second_moment_of_area(&self) -> Matrix3<f64> {
-        let s2 = self.local_second_moment_of_area();
-        let ixx = s2[(0, 0)];
-        let iyy = s2[(1, 1)];
-        let ixy = s2[(0, 1)];
-        // Inertia tensor for a thin plate in its plane
-        let mut j_local = Matrix3::zeros();
-        j_local[(0, 0)] = ixx;
-        j_local[(1, 1)] = iyy;
-        j_local[(0, 1)] = -ixy;
-        j_local[(1, 0)] = -ixy;
-        j_local[(2, 2)] = ixx + iyy; // polar about normal
-        // Rotate to global
-        self.rotation * j_local * self.rotation.transpose()
+        let local = self.local_second_moment_of_area();
+        self.embed_plate_inertia(local)
+    }
+
+    /// Centroidal 3D second moment of area tensor (thin-plate inertia rotated to
+    /// the global frame).
+    pub fn centroidal_second_moment_of_area(&self) -> Matrix3<f64> {
+        let local = self.centroidal_local_second_moment_of_area();
+        self.embed_plate_inertia(local)
     }
 
     /// Global 3D second moment of area tensor computed about the polygon "center"
-    /// which we define as the first vertex (matching reference prints). This uses
-    /// the local coordinates built with origin at the first vertex without shifting
-    /// to the centroid.
+    /// (the first provided vertex). This matches the historical helper that returns
+    /// inertia prior to shifting into the modeling origin.
     pub fn second_moment_of_area_at_center(&self) -> Matrix3<f64> {
         let r_t = self.rotation.transpose();
         let origin0 = self.vertices[0].to_vec3();
@@ -333,7 +286,8 @@ where
             .map(|v| r_t * (v.to_vec3() - origin0))
             .collect();
 
-        let mut ix0_sum = 0.0; // about origin0
+        let mut area2_sum = 0.0;
+        let mut ix0_sum = 0.0;
         let mut iy0_sum = 0.0;
         let mut ixy0_sum = 0.0;
 
@@ -341,17 +295,20 @@ where
             let p = locals[i];
             let q = locals[(i + 1) % locals.len()];
             let cross = p.x * q.y - q.x * p.y;
+            area2_sum += cross;
             let yy = p.y * p.y + p.y * q.y + q.y * q.y;
             let xx = p.x * p.x + p.x * q.x + q.x * q.x;
             let xy = p.x * q.y + 2.0 * p.x * p.y + 2.0 * q.x * q.y + q.x * p.y;
-            ix0_sum += yy * cross; // Ixx about origin (integral of y^2)
-            iy0_sum += xx * cross; // Iyy about origin (integral of x^2)
-            ixy0_sum += xy * cross; // Ixy about origin (integral of x*y)
+            ix0_sum += yy * cross;
+            iy0_sum += xx * cross;
+            ixy0_sum += xy * cross;
         }
 
-        let ixx0 = ix0_sum / 12.0;
-        let iyy0 = iy0_sum / 12.0;
-        let ixy0 = ixy0_sum / 24.0;
+        let sign = if area2_sum >= 0.0 { 1.0 } else { -1.0 };
+
+        let ixx0 = (ix0_sum / 12.0) * sign;
+        let iyy0 = (iy0_sum / 12.0) * sign;
+        let ixy0 = (ixy0_sum / 24.0) * sign;
 
         let mut j_local = Matrix3::zeros();
         j_local[(0, 0)] = ixx0;
@@ -360,6 +317,77 @@ where
         j_local[(1, 0)] = -ixy0;
         j_local[(2, 2)] = ixx0 + iyy0;
         self.rotation * j_local * self.rotation.transpose()
+    }
+
+    fn centroidal_local_second_moment(&self) -> Matrix2<f64> {
+        let (area, cx, cy, ix0, iy0, ixy0) = self.planar_moment_terms();
+        if area <= epsilon() {
+            return Matrix2::zeros();
+        }
+        let ixx_c = ix0 - area * cy * cy;
+        let iyy_c = iy0 - area * cx * cx;
+        let ixy_c = ixy0 - area * cx * cy;
+        Matrix2::new(ixx_c, ixy_c, ixy_c, iyy_c)
+    }
+
+    fn embed_plate_inertia(&self, local: Matrix2<f64>) -> Matrix3<f64> {
+        let ixx = local[(0, 0)];
+        let iyy = local[(1, 1)];
+        let ixy = local[(0, 1)];
+        let mut j_local = Matrix3::zeros();
+        j_local[(0, 0)] = ixx;
+        j_local[(1, 1)] = iyy;
+        j_local[(0, 1)] = -ixy;
+        j_local[(1, 0)] = -ixy;
+        j_local[(2, 2)] = ixx + iyy;
+        self.rotation * j_local * self.rotation.transpose()
+    }
+
+    fn planar_moment_terms(&self) -> (f64, f64, f64, f64, f64, f64) {
+        let r_t = self.rotation.transpose();
+        let origin0 = self.vertices[0].to_vec3();
+        let locals: Vec<Vector3<f64>> = self
+            .vertices
+            .iter()
+            .map(|v| r_t * (v.to_vec3() - origin0))
+            .collect();
+
+        let mut area2 = 0.0;
+        let mut cx_num = 0.0;
+        let mut cy_num = 0.0;
+        let mut ix0_sum = 0.0;
+        let mut iy0_sum = 0.0;
+        let mut ixy0_sum = 0.0;
+
+        for i in 0..locals.len() {
+            let p = locals[i];
+            let q = locals[(i + 1) % locals.len()];
+            let cross = p.x * q.y - q.x * p.y;
+            area2 += cross;
+            cx_num += (p.x + q.x) * cross;
+            cy_num += (p.y + q.y) * cross;
+
+            let yy = p.y * p.y + p.y * q.y + q.y * q.y;
+            let xx = p.x * p.x + p.x * q.x + q.x * q.x;
+            let xy = p.x * q.y + 2.0 * p.x * p.y + 2.0 * q.x * q.y + q.x * p.y;
+            ix0_sum += yy * cross;
+            iy0_sum += xx * cross;
+            ixy0_sum += xy * cross;
+        }
+
+        let area_signed = 0.5 * area2;
+        if area_signed.abs() <= epsilon() {
+            return (0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+        }
+
+        let cx = cx_num / (3.0 * area2);
+        let cy = cy_num / (3.0 * area2);
+        let sign = if area_signed >= 0.0 { 1.0 } else { -1.0 };
+        let ix0 = (ix0_sum / 12.0) * sign;
+        let iy0 = (iy0_sum / 12.0) * sign;
+        let ixy0 = (ixy0_sum / 24.0) * sign;
+
+        (area_signed.abs(), cx, cy, ix0, iy0, ixy0)
     }
 
     /// Global 3D principal axes as a 3x3 rotation matrix whose columns are the principal

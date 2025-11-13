@@ -412,7 +412,7 @@ fn polygon_geometry_properties_reference_examples() {
     assert_almost_eq!(j[(1,2)], j[(2,1)]);
     let lpa = p.local_principal_axes();
     // Check that local principal axes diagonalize the local inertia
-    let s = p.local_second_moment_of_area();
+    let s = p.centroidal_local_second_moment_of_area();
     let d = lpa.transpose() * s * lpa;
     assert_almost_eq!(d[(0,1)], 0.0);
     assert_almost_eq!(d[(1,0)], 0.0);
@@ -437,7 +437,7 @@ fn polygon_geometry_properties_reference_examples() {
     assert_almost_eq!(j[(0,2)], j[(2,0)]);
     assert_almost_eq!(j[(1,2)], j[(2,1)]);
     let lpa = p.local_principal_axes();
-    let s = p.local_second_moment_of_area();
+    let s = p.centroidal_local_second_moment_of_area();
     let d = lpa.transpose() * s * lpa;
     assert_almost_eq!(d[(0,1)], 0.0);
     assert_almost_eq!(d[(1,0)], 0.0);
@@ -452,7 +452,7 @@ fn polygon_geometry_properties_reference_examples() {
     assert_almost_eq!(p.perimeter(), 4.986599152627351);
     approx_vec3(p.centroid(), Vector3d::new(4.892332, 2.2145686666666666, 0.5225023333333333));
     let lpa = p.local_principal_axes();
-    let s = p.local_second_moment_of_area();
+    let s = p.centroidal_local_second_moment_of_area();
     let d = lpa.transpose() * s * lpa;
     assert_almost_eq!(d[(0,1)], 0.0);
     assert_almost_eq!(d[(1,0)], 0.0);
@@ -467,7 +467,7 @@ fn polygon_geometry_properties_reference_examples() {
     assert_almost_eq!(p.perimeter(), 7.545867664300957);
     approx_vec3(p.centroid(), Vector3d::new(-3.6544923333333332, 0.3132906666666666, -0.7554033333333334));
     let lpa = p.local_principal_axes();
-    let s = p.local_second_moment_of_area();
+    let s = p.centroidal_local_second_moment_of_area();
     let d = lpa.transpose() * s * lpa;
     assert_almost_eq!(d[(0,1)], 0.0);
     assert_almost_eq!(d[(1,0)], 0.0);
@@ -492,7 +492,7 @@ fn polygon_geometry_properties_reference_examples() {
     assert_almost_eq!(j[(0,2)], j[(2,0)]);
     assert_almost_eq!(j[(1,2)], j[(2,1)]);
     let lpa = p.local_principal_axes();
-    let s = p.local_second_moment_of_area();
+    let s = p.centroidal_local_second_moment_of_area();
     let d = lpa.transpose() * s * lpa;
     assert_almost_eq!(d[(0,1)], 0.0);
     assert_almost_eq!(d[(1,0)], 0.0);
@@ -517,7 +517,7 @@ fn polygon_geometry_properties_reference_examples() {
     assert_almost_eq!(j[(0,2)], j[(2,0)]);
     assert_almost_eq!(j[(1,2)], j[(2,1)]);
     let lpa = p.local_principal_axes();
-    let s = p.local_second_moment_of_area();
+    let s = p.centroidal_local_second_moment_of_area();
     let d = lpa.transpose() * s * lpa;
     assert_almost_eq!(d[(0,1)], 0.0);
     assert_almost_eq!(d[(1,0)], 0.0);
@@ -542,7 +542,7 @@ fn polygon_geometry_properties_reference_examples() {
     assert_almost_eq!(j[(0,2)], j[(2,0)]);
     assert_almost_eq!(j[(1,2)], j[(2,1)]);
     let lpa = p.local_principal_axes();
-    let s = p.local_second_moment_of_area();
+    let s = p.centroidal_local_second_moment_of_area();
     let d = lpa.transpose() * s * lpa;
     assert_almost_eq!(d[(0,1)], 0.0);
     assert_almost_eq!(d[(1,0)], 0.0);
@@ -567,7 +567,7 @@ fn polygon_geometry_properties_reference_examples() {
     assert_almost_eq!(j[(0,2)], j[(2,0)]);
     assert_almost_eq!(j[(1,2)], j[(2,1)]);
     let lpa = p.local_principal_axes();
-    let s = p.local_second_moment_of_area();
+    let s = p.centroidal_local_second_moment_of_area();
     let d = lpa.transpose() * s * lpa;
     assert_almost_eq!(d[(0,1)], 0.0);
     assert_almost_eq!(d[(1,0)], 0.0);
@@ -593,7 +593,7 @@ fn polygon_geometry_properties_reference_examples() {
     assert_almost_eq!(j[(0,2)], j[(2,0)]);
     assert_almost_eq!(j[(1,2)], j[(2,1)]);
     let lpa = p.local_principal_axes();
-    let s = p.local_second_moment_of_area();
+    let s = p.centroidal_local_second_moment_of_area();
     let d = lpa.transpose() * s * lpa;
     assert_almost_eq!(d[(0,1)], 0.0);
     assert_almost_eq!(d[(1,0)], 0.0);
@@ -619,7 +619,7 @@ fn polygon_geometry_properties_reference_examples() {
     assert_almost_eq!(j[(0,2)], j[(2,0)]);
     assert_almost_eq!(j[(1,2)], j[(2,1)]);
     let lpa = p.local_principal_axes();
-    let s = p.local_second_moment_of_area();
+    let s = p.centroidal_local_second_moment_of_area();
     let d = lpa.transpose() * s * lpa;
     assert!(d[(0,1)].abs() < 1e-9 && d[(1,0)].abs() < 1e-9);
     // Eigenvalues may suffer tiny negative drift numerically; we only check diagonalization.
@@ -644,7 +644,7 @@ fn polygon_geometry_properties_reference_examples() {
     assert_almost_eq!(j[(0,2)], j[(2,0)]);
     assert_almost_eq!(j[(1,2)], j[(2,1)]);
     let lpa = p.local_principal_axes();
-    let s = p.local_second_moment_of_area();
+    let s = p.centroidal_local_second_moment_of_area();
     let d = lpa.transpose() * s * lpa;
     assert!(d[(0,1)].abs() < 1e-9 && d[(1,0)].abs() < 1e-9);
     // Eigenvalues may suffer tiny negative drift numerically; we only check diagonalization.
@@ -669,7 +669,7 @@ fn polygon_geometry_properties_reference_examples() {
     assert_almost_eq!(j[(0,2)], j[(2,0)]);
     assert_almost_eq!(j[(1,2)], j[(2,1)]);
     let lpa = p.local_principal_axes();
-    let s = p.local_second_moment_of_area();
+    let s = p.centroidal_local_second_moment_of_area();
     let d = lpa.transpose() * s * lpa;
     assert!(d[(0,1)].abs() < 1e-9 && d[(1,0)].abs() < 1e-9);
     // Eigenvalues may suffer tiny negative drift numerically; we only check diagonalization.
@@ -695,7 +695,7 @@ fn polygon_geometry_properties_reference_examples() {
     assert_almost_eq!(j[(0,2)], j[(2,0)]);
     assert_almost_eq!(j[(1,2)], j[(2,1)]);
     let lpa = p.local_principal_axes();
-    let s = p.local_second_moment_of_area();
+    let s = p.centroidal_local_second_moment_of_area();
     let d = lpa.transpose() * s * lpa;
     assert!(d[(0,1)].abs() < 1e-9 && d[(1,0)].abs() < 1e-9);
     // Eigenvalues may suffer tiny negative drift numerically; we only check diagonalization.
@@ -721,7 +721,7 @@ fn polygon_geometry_properties_reference_examples() {
     assert_almost_eq!(j[(0,2)], j[(2,0)]);
     assert_almost_eq!(j[(1,2)], j[(2,1)]);
     let lpa = p.local_principal_axes();
-    let s = p.local_second_moment_of_area();
+    let s = p.centroidal_local_second_moment_of_area();
     let d = lpa.transpose() * s * lpa;
     assert!(d[(0,1)].abs() < 1e-9 && d[(1,0)].abs() < 1e-9);
     // Eigenvalues may suffer tiny negative drift numerically; we only check diagonalization.
@@ -747,7 +747,7 @@ fn polygon_geometry_properties_reference_examples() {
     assert_almost_eq!(j[(0,2)], j[(2,0)]);
     assert_almost_eq!(j[(1,2)], j[(2,1)]);
     let lpa = p.local_principal_axes();
-    let s = p.local_second_moment_of_area();
+    let s = p.centroidal_local_second_moment_of_area();
     let d = lpa.transpose() * s * lpa;
     assert!(d[(0,1)].abs() < 1e-9 && d[(1,0)].abs() < 1e-9);
     // Eigenvalues may suffer tiny negative drift numerically; we only check diagonalization.
@@ -773,7 +773,7 @@ fn polygon_geometry_properties_reference_examples() {
     assert_almost_eq!(j[(0,2)], j[(2,0)]);
     assert_almost_eq!(j[(1,2)], j[(2,1)]);
     let lpa = p.local_principal_axes();
-    let s = p.local_second_moment_of_area();
+    let s = p.centroidal_local_second_moment_of_area();
     let d = lpa.transpose() * s * lpa;
     assert!(d[(0,1)].abs() < 1e-9 && d[(1,0)].abs() < 1e-9);
     // Eigenvalues may suffer tiny negative drift numerically; we only check diagonalization.
@@ -800,7 +800,7 @@ fn polygon_geometry_properties_reference_examples() {
     assert_almost_eq!(j[(0,2)], j[(2,0)]);
     assert_almost_eq!(j[(1,2)], j[(2,1)]);
     let lpa = p.local_principal_axes();
-    let s = p.local_second_moment_of_area();
+    let s = p.centroidal_local_second_moment_of_area();
     let d = lpa.transpose() * s * lpa;
     assert!(d[(0,1)].abs() < 1e-9 && d[(1,0)].abs() < 1e-9);
     // Eigenvalues may suffer tiny negative drift numerically; we only check diagonalization.
@@ -827,7 +827,7 @@ fn polygon_geometry_properties_reference_examples() {
     assert_almost_eq!(j[(0,2)], j[(2,0)]);
     assert_almost_eq!(j[(1,2)], j[(2,1)]);
     let lpa = p.local_principal_axes();
-    let s = p.local_second_moment_of_area();
+    let s = p.centroidal_local_second_moment_of_area();
     let d = lpa.transpose() * s * lpa;
     assert!(d[(0,1)].abs() < 1e-9 && d[(1,0)].abs() < 1e-9);
     // Eigenvalues may suffer tiny negative drift numerically; we only check diagonalization.
@@ -854,7 +854,7 @@ fn polygon_geometry_properties_reference_examples() {
     assert_almost_eq!(j[(0,2)], j[(2,0)]);
     assert_almost_eq!(j[(1,2)], j[(2,1)]);
     let lpa = p.local_principal_axes();
-    let s = p.local_second_moment_of_area();
+    let s = p.centroidal_local_second_moment_of_area();
     let d = lpa.transpose() * s * lpa;
     assert!(d[(0,1)].abs() < 1e-9 && d[(1,0)].abs() < 1e-9);
     // Eigenvalues may suffer tiny negative drift numerically; we only check diagonalization.
@@ -881,7 +881,7 @@ fn polygon_geometry_properties_reference_examples() {
     assert_almost_eq!(j[(0,2)], j[(2,0)]);
     assert_almost_eq!(j[(1,2)], j[(2,1)]);
     let lpa = p.local_principal_axes();
-    let s = p.local_second_moment_of_area();
+    let s = p.centroidal_local_second_moment_of_area();
     let d = lpa.transpose() * s * lpa;
     assert!(d[(0,1)].abs() < 1e-9 && d[(1,0)].abs() < 1e-9);
     // Eigenvalues may suffer tiny negative drift numerically; we only check diagonalization.
