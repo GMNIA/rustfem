@@ -161,6 +161,10 @@ pub struct ShapeI {
     pub top_thickness: f64,
     pub web_thickness: f64,
     pub fillet: f64,
+    pub top_toe_radius: f64,
+    pub bottom_toe_radius: f64,
+    pub top_taper_angle: f64,
+    pub bottom_taper_angle: f64,
     polygon: RawPolygon<Vector3d>,
 }
 
@@ -173,6 +177,10 @@ impl ShapeI {
         top_thickness: f64,
         web_thickness: f64,
         fillet: f64,
+        top_toe_radius: f64,
+        bottom_toe_radius: f64,
+        top_taper_angle: f64,
+        bottom_taper_angle: f64,
     ) -> Self {
         assert!(height > bottom_thickness + top_thickness, "height must exceed flange thickness");
         let hw = height / 2.0;
@@ -204,6 +212,10 @@ impl ShapeI {
             top_thickness,
             web_thickness,
             fillet,
+            top_toe_radius,
+            bottom_toe_radius,
+            top_taper_angle,
+            bottom_taper_angle,
             polygon,
         }
     }
@@ -221,6 +233,12 @@ pub struct ShapeC {
     pub top_thickness: f64,
     pub web_thickness: f64,
     pub fillet: f64,
+    pub top_toe_radius: f64,
+    pub bottom_toe_radius: f64,
+    pub top_back_fillet: f64,
+    pub bottom_back_fillet: f64,
+    pub top_taper_angle: f64,
+    pub bottom_taper_angle: f64,
     polygon: RawPolygon<Vector3d>,
 }
 
@@ -233,6 +251,12 @@ impl ShapeC {
         top_thickness: f64,
         web_thickness: f64,
         fillet: f64,
+        top_toe_radius: f64,
+        bottom_toe_radius: f64,
+        top_back_fillet: f64,
+        bottom_back_fillet: f64,
+        top_taper_angle: f64,
+        bottom_taper_angle: f64,
     ) -> Self {
         assert!(height > bottom_thickness + top_thickness, "height must exceed flange thickness");
         let half_h = height / 2.0;
@@ -245,8 +269,6 @@ impl ShapeC {
             Vector3d::new(top_width, half_h - top_thickness, 0.0),
             Vector3d::new(top_width, half_h, 0.0),
             Vector3d::new(0.0, half_h, 0.0),
-            Vector3d::new(0.0, half_h - top_thickness, 0.0),
-            Vector3d::new(0.0, -half_h + bottom_thickness, 0.0),
         ];
         let polygon = RawPolygon::new(verts);
         Self {
@@ -257,6 +279,12 @@ impl ShapeC {
             top_thickness,
             web_thickness,
             fillet,
+            top_toe_radius,
+            bottom_toe_radius,
+            top_back_fillet,
+            bottom_back_fillet,
+            top_taper_angle,
+            bottom_taper_angle,
             polygon,
         }
     }
@@ -272,6 +300,9 @@ pub struct ShapeL {
     pub flange_thickness: f64,
     pub web_thickness: f64,
     pub fillet: f64,
+    pub toe_radius: f64,
+    pub back_fillet: f64,
+    pub taper_angle: f64,
     polygon: RawPolygon<Vector3d>,
 }
 
@@ -282,18 +313,37 @@ impl ShapeL {
         flange_thickness: f64,
         web_thickness: f64,
         fillet: f64,
+        toe_radius: f64,
+        back_fillet: f64,
+        taper_angle: f64,
     ) -> Self {
         assert!(width > web_thickness && height > flange_thickness, "invalid L-section dimensions");
+        
+        // Position L-section with web centered on Y-axis and flange extending to the right
+        // Height extends symmetrically about X-axis
+        let web_half = web_thickness / 2.0;
+        let height_half = height / 2.0;
+        
         let verts = vec![
-            Vector3d::new(0.0, 0.0, 0.0),
-            Vector3d::new(width, 0.0, 0.0),
-            Vector3d::new(width, flange_thickness, 0.0),
-            Vector3d::new(web_thickness, flange_thickness, 0.0),
-            Vector3d::new(web_thickness, height, 0.0),
-            Vector3d::new(0.0, height, 0.0),
+            Vector3d::new(-web_half, -height_half, 0.0),
+            Vector3d::new(width - web_half, -height_half, 0.0),
+            Vector3d::new(width - web_half, -height_half + flange_thickness, 0.0),
+            Vector3d::new(web_half, -height_half + flange_thickness, 0.0),
+            Vector3d::new(web_half, height_half, 0.0),
+            Vector3d::new(-web_half, height_half, 0.0),
         ];
         let polygon = RawPolygon::new(verts);
-        Self { width, height, flange_thickness, web_thickness, fillet, polygon }
+        Self {
+            width,
+            height,
+            flange_thickness,
+            web_thickness,
+            fillet,
+            toe_radius,
+            back_fillet,
+            taper_angle,
+            polygon,
+        }
     }
 }
 
@@ -307,6 +357,8 @@ pub struct ShapeT {
     pub flange_thickness: f64,
     pub web_thickness: f64,
     pub fillet: f64,
+    pub toe_radius: f64,
+    pub taper_angle: f64,
     polygon: RawPolygon<Vector3d>,
 }
 
@@ -317,23 +369,34 @@ impl ShapeT {
         flange_thickness: f64,
         web_thickness: f64,
         fillet: f64,
+        toe_radius: f64,
+        taper_angle: f64,
     ) -> Self {
         assert!(height > flange_thickness, "height must exceed flange thickness");
         let half_h = height / 2.0;
         let half_w = width / 2.0;
         let web_half = web_thickness / 2.0;
         let verts = vec![
-            Vector3d::new(-half_w, half_h, 0.0),
-            Vector3d::new(half_w, half_h, 0.0),
-            Vector3d::new(half_w, half_h - flange_thickness, 0.0),
-            Vector3d::new(web_half, half_h - flange_thickness, 0.0),
-            Vector3d::new(web_half, -half_h, 0.0),
             Vector3d::new(-web_half, -half_h, 0.0),
-            Vector3d::new(-web_half, half_h - flange_thickness, 0.0),
+            Vector3d::new(web_half, -half_h, 0.0),
+            Vector3d::new(web_half, half_h - flange_thickness, 0.0),
+            Vector3d::new(half_w, half_h - flange_thickness, 0.0),
+            Vector3d::new(half_w, half_h, 0.0),
+            Vector3d::new(-half_w, half_h, 0.0),
             Vector3d::new(-half_w, half_h - flange_thickness, 0.0),
+            Vector3d::new(-web_half, half_h - flange_thickness, 0.0),
         ];
         let polygon = RawPolygon::new(verts);
-        Self { width, height, flange_thickness, web_thickness, fillet, polygon }
+        Self {
+            width,
+            height,
+            flange_thickness,
+            web_thickness,
+            fillet,
+            toe_radius,
+            taper_angle,
+            polygon,
+        }
     }
 }
 
@@ -343,8 +406,7 @@ impl_polygon_shape!(ShapeT);
 mod tests {
     use std::f64::consts::PI;
 
-    use crate::{assert_almost_eq, assert_vec3_almost_eq, epsilon, DEFAULT_EPSILON};
-    use crate::precision::with_epsilon;
+    use crate::{assert_almost_eq, assert_vec3_almost_eq, epsilon};
 
     use super::*;
 
@@ -369,54 +431,42 @@ mod tests {
 
     #[test]
     fn rectangle_area_matches_dimensions() {
-        with_epsilon(DEFAULT_EPSILON, || {
-            let rect = Rectangle::new(0.3, 0.2, 0.0, 0.0);
-            assert_relative_eq("rectangle area", 0.06, rect.area());
-            let poly = rect.to_polygon();
-            assert_eq!(poly.vertices().len(), 4);
-        });
+        let rect = Rectangle::new(0.3, 0.2, 0.0, 0.0);
+        assert_relative_eq("rectangle area", 0.06, rect.area());
+        let poly = rect.to_polygon();
+        assert_eq!(poly.vertices().len(), 4);
     }
 
     #[test]
     fn disk_area_close_to_circle() {
-        with_epsilon(DEFAULT_EPSILON, || {
-            let disk = Disk::new(0.15, 0.0);
-            let area = disk.area();
-            let expected = PI * 0.15 * 0.15;
-            assert_relative_eq("disk area", expected, area);
-        });
+        let disk = Disk::new(0.15, 0.0);
+        let area = disk.area();
+        let expected = PI * 0.15 * 0.15;
+        assert_relative_eq("disk area", expected, area);
     }
 
     #[test]
     fn shape_i_area_matches_components() {
-        with_epsilon(DEFAULT_EPSILON, || {
-            let shape = ShapeI::new(0.18, 0.18, 0.3, 0.02, 0.02, 0.01, 0.0);
-            assert_relative_eq("shape I area", 0.009799999999999986, shape.area());
-        });
+        let shape = ShapeI::new(0.18, 0.18, 0.3, 0.02, 0.02, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0);
+        assert_relative_eq("shape I area", 0.009799999999999986, shape.area());
     }
 
     #[test]
     fn shape_c_area_matches_components() {
-        with_epsilon(DEFAULT_EPSILON, || {
-            let shape = ShapeC::new(0.12, 0.08, 0.25, 0.015, 0.012, 0.008, 0.0);
-            assert_relative_eq("shape C area", 0.004544000000000003, shape.area());
-        });
+        let shape = ShapeC::new(0.12, 0.08, 0.25, 0.015, 0.012, 0.008, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+        assert_relative_eq("shape C area", 0.004544000000000003, shape.area());
     }
 
     #[test]
     fn shape_l_area_matches_components() {
-        with_epsilon(DEFAULT_EPSILON, || {
-            let shape = ShapeL::new(0.1, 0.12, 0.02, 0.015, 0.0);
-            assert_relative_eq("shape L area", 0.0035000000000000005, shape.area());
-        });
+        let shape = ShapeL::new(0.1, 0.12, 0.02, 0.015, 0.0, 0.0, 0.0, 0.0);
+        assert_relative_eq("shape L area", 0.0035000000000000005, shape.area());
     }
 
     #[test]
     fn shape_t_area_matches_components() {
-        with_epsilon(DEFAULT_EPSILON, || {
-            let shape = ShapeT::new(0.14, 0.28, 0.02, 0.01, 0.0);
-            assert_relative_eq("shape T area", 0.005400000000000002, shape.area());
-        });
+        let shape = ShapeT::new(0.14, 0.28, 0.02, 0.01, 0.0, 0.0, 0.0);
+        assert_relative_eq("shape T area", 0.005400000000000002, shape.area());
     }
 
     #[test]
@@ -424,14 +474,14 @@ mod tests {
         let shapes: Vec<(&str, f64, Box<dyn Shape>)> = vec![
             ("Rectangle", 0.020000000000000004, Box::new(Rectangle::new(0.2, 0.1, 0.0, 0.0))),
             ("Disk", 0.031415926535897934, Box::new(Disk::new(0.1, 0.0))),
-            ("ShapeI", 0.008208000000000003, Box::new(ShapeI::new(0.16, 0.16, 0.24, 0.018, 0.018, 0.012, 0.0))),
+            ("ShapeI", 0.008208000000000003, Box::new(ShapeI::new(0.16, 0.16, 0.24, 0.018, 0.018, 0.012, 0.0, 0.0, 0.0, 0.0, 0.0))),
             (
                 "ShapeC",
                 0.004100000000000004,
-                Box::new(ShapeC::new(0.1, 0.08, 0.2, 0.014, 0.012, 0.01, 0.0)),
+                Box::new(ShapeC::new(0.1, 0.08, 0.2, 0.014, 0.012, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)),
             ),
-            ("ShapeL", 0.0021000000000000003, Box::new(ShapeL::new(0.08, 0.09, 0.015, 0.012, 0.0))),
-            ("ShapeT", 0.004180000000000003, Box::new(ShapeT::new(0.12, 0.22, 0.018, 0.01, 0.0))),
+            ("ShapeL", 0.0021000000000000003, Box::new(ShapeL::new(0.08, 0.09, 0.015, 0.012, 0.0, 0.0, 0.0, 0.0))),
+            ("ShapeT", 0.004180000000000003, Box::new(ShapeT::new(0.12, 0.22, 0.018, 0.01, 0.0, 0.0, 0.0))),
         ];
         for (label, expected_area, shape) in shapes {
             assert_relative_eq(&format!("{label} area"), expected_area, shape.area());
@@ -447,109 +497,103 @@ mod tests {
 
     #[test]
     fn rectangle_simple_matches_reference_snapshot() {
-        with_epsilon(DEFAULT_EPSILON, || {
-            let rect = Rectangle::new(200.0, 100.0, 0.0, 0.0);
-            let poly = rect.to_polygon();
+        let rect = Rectangle::new(200.0, 100.0, 0.0, 0.0);
+        let poly = rect.to_polygon();
 
-            assert_relative_eq("rectangle area", 20000.0, poly.area());
-            assert_vec3_almost_eq!(poly.centroid(), Vector3d::new(0.0, 0.0, 0.0));
+        assert_relative_eq("rectangle area", 20000.0, poly.area());
+        assert_vec3_almost_eq!(poly.centroid(), Vector3d::new(0.0, 0.0, 0.0));
 
-            let local = poly.local_second_moment_of_area();
-            assert_relative_eq("rectangle I_xx local", 16666666.666666666, local[(0, 0)]);
-            assert_relative_eq("rectangle I_yy local", 66666666.666666664, local[(1, 1)]);
-            assert_almost_eq!(local[(0, 1)], 0.0);
-            let centroidal_local = poly.centroidal_local_second_moment_of_area();
-            assert_relative_eq("rectangle I_xx centroidal local", 16666666.666666666, centroidal_local[(0, 0)]);
-            assert_relative_eq("rectangle I_yy centroidal local", 66666666.666666664, centroidal_local[(1, 1)]);
-            assert_almost_eq!(centroidal_local[(0, 1)], 0.0);
+        let local = poly.local_second_moment_of_area();
+        assert_relative_eq("rectangle I_xx local", 16666666.666666666, local[(0, 0)]);
+        assert_relative_eq("rectangle I_yy local", 66666666.666666664, local[(1, 1)]);
+        assert_almost_eq!(local[(0, 1)], 0.0);
+        let centroidal_local = poly.centroidal_local_second_moment_of_area();
+        assert_relative_eq("rectangle I_xx centroidal local", 16666666.666666666, centroidal_local[(0, 0)]);
+        assert_relative_eq("rectangle I_yy centroidal local", 66666666.666666664, centroidal_local[(1, 1)]);
+        assert_almost_eq!(centroidal_local[(0, 1)], 0.0);
 
-            let principal = poly.local_principal_axes();
-            assert_relative_eq("rectangle principal (0,0)", 1.0, principal[(0, 0)]);
-            assert_relative_eq("rectangle principal (0,1)", 0.0, principal[(0, 1)]);
-            assert_relative_eq("rectangle principal (1,0)", 0.0, principal[(1, 0)]);
-            assert_relative_eq("rectangle principal (1,1)", 1.0, principal[(1, 1)]);
+        let principal = poly.local_principal_axes();
+        assert_relative_eq("rectangle principal (0,0)", 1.0, principal[(0, 0)]);
+        assert_relative_eq("rectangle principal (0,1)", 0.0, principal[(0, 1)]);
+        assert_relative_eq("rectangle principal (1,0)", 0.0, principal[(1, 0)]);
+        assert_relative_eq("rectangle principal (1,1)", 1.0, principal[(1, 1)]);
 
-            let global = poly.second_moment_of_area();
-            assert_relative_eq("rectangle I_xx global", 16666666.666666666, global[(0, 0)]);
-            assert_relative_eq("rectangle I_yy global", 66666666.666666664, global[(1, 1)]);
-            assert_relative_eq("rectangle I_zz global", 83333333.33333333, global[(2, 2)]);
-            assert_almost_eq!(global[(0, 1)], 0.0);
-            assert_almost_eq!(global[(0, 2)], 0.0);
-            assert_almost_eq!(global[(1, 2)], 0.0);
-            let centroidal_global = poly.centroidal_second_moment_of_area();
-            assert_relative_eq("rectangle I_xx centroidal global", 16666666.666666666, centroidal_global[(0, 0)]);
-            assert_relative_eq("rectangle I_yy centroidal global", 66666666.666666664, centroidal_global[(1, 1)]);
-            assert_relative_eq("rectangle I_zz centroidal global", 83333333.33333333, centroidal_global[(2, 2)]);
-        });
+        let global = poly.second_moment_of_area();
+        assert_relative_eq("rectangle I_xx global", 16666666.666666666, global[(0, 0)]);
+        assert_relative_eq("rectangle I_yy global", 66666666.666666664, global[(1, 1)]);
+        assert_relative_eq("rectangle I_zz global", 83333333.33333333, global[(2, 2)]);
+        assert_almost_eq!(global[(0, 1)], 0.0);
+        assert_almost_eq!(global[(0, 2)], 0.0);
+        assert_almost_eq!(global[(1, 2)], 0.0);
+        let centroidal_global = poly.centroidal_second_moment_of_area();
+        assert_relative_eq("rectangle I_xx centroidal global", 16666666.666666666, centroidal_global[(0, 0)]);
+        assert_relative_eq("rectangle I_yy centroidal global", 66666666.666666664, centroidal_global[(1, 1)]);
+        assert_relative_eq("rectangle I_zz centroidal global", 83333333.33333333, centroidal_global[(2, 2)]);
     }
 
     #[test]
     fn shape_i_simple_matches_reference_snapshot() {
-        with_epsilon(DEFAULT_EPSILON, || {
-            let shape = ShapeI::new(120.0, 120.0, 300.0, 12.0, 12.0, 8.0, 0.0);
-            let poly = shape.to_polygon();
+        let shape = ShapeI::new(120.0, 120.0, 300.0, 12.0, 12.0, 8.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+        let poly = shape.to_polygon();
 
-            assert_relative_eq("shape I area", 5088.0, poly.area());
-            assert_vec3_almost_eq!(poly.centroid(), Vector3d::new(0.0, 0.0, 0.0));
+        assert_relative_eq("shape I area", 5088.0, poly.area());
+        assert_vec3_almost_eq!(poly.centroid(), Vector3d::new(0.0, 0.0, 0.0));
 
-            let local = poly.local_second_moment_of_area();
-            assert_relative_eq("shape I I_xx local", 73770624.0, local[(0, 0)]);
-            assert_relative_eq("shape I I_yy local", 3467776.0, local[(1, 1)]);
-            assert_almost_eq!(local[(0, 1)], 0.0);
-            let centroidal_local = poly.centroidal_local_second_moment_of_area();
-            assert_relative_eq("shape I I_xx centroidal local", 73770624.0, centroidal_local[(0, 0)]);
-            assert_relative_eq("shape I I_yy centroidal local", 3467776.0, centroidal_local[(1, 1)]);
-            assert_almost_eq!(centroidal_local[(0, 1)], 0.0);
+        let local = poly.local_second_moment_of_area();
+        assert_relative_eq("shape I I_xx local", 73770624.0, local[(0, 0)]);
+        assert_relative_eq("shape I I_yy local", 3467776.0, local[(1, 1)]);
+        assert_almost_eq!(local[(0, 1)], 0.0);
+        let centroidal_local = poly.centroidal_local_second_moment_of_area();
+        assert_relative_eq("shape I I_xx centroidal local", 73770624.0, centroidal_local[(0, 0)]);
+        assert_relative_eq("shape I I_yy centroidal local", 3467776.0, centroidal_local[(1, 1)]);
+        assert_almost_eq!(centroidal_local[(0, 1)], 0.0);
 
-            let principal = poly.local_principal_axes();
-            assert_relative_eq("shape I principal (0,0)", 0.0, principal[(0, 0)]);
-            assert_relative_eq("shape I principal (0,1)", 1.0, principal[(0, 1)]);
-            assert_relative_eq("shape I principal (1,0)", 1.0, principal[(1, 0)]);
-            assert_relative_eq("shape I principal (1,1)", 0.0, principal[(1, 1)]);
+        let principal = poly.local_principal_axes();
+        assert_relative_eq("shape I principal (0,0)", 0.0, principal[(0, 0)]);
+        assert_relative_eq("shape I principal (0,1)", 1.0, principal[(0, 1)]);
+        assert_relative_eq("shape I principal (1,0)", 1.0, principal[(1, 0)]);
+        assert_relative_eq("shape I principal (1,1)", 0.0, principal[(1, 1)]);
 
-            let global = poly.second_moment_of_area();
-            assert_relative_eq("shape I I_xx global", 73770624.0, global[(0, 0)]);
-            assert_relative_eq("shape I I_yy global", 3467776.0, global[(1, 1)]);
-            assert_relative_eq("shape I I_zz global", 77238400.0, global[(2, 2)]);
-            let centroidal_global = poly.centroidal_second_moment_of_area();
-            assert_relative_eq("shape I I_xx centroidal global", 73770624.0, centroidal_global[(0, 0)]);
-            assert_relative_eq("shape I I_yy centroidal global", 3467776.0, centroidal_global[(1, 1)]);
-            assert_relative_eq("shape I I_zz centroidal global", 77238400.0, centroidal_global[(2, 2)]);
-        });
+        let global = poly.second_moment_of_area();
+        assert_relative_eq("shape I I_xx global", 73770624.0, global[(0, 0)]);
+        assert_relative_eq("shape I I_yy global", 3467776.0, global[(1, 1)]);
+        assert_relative_eq("shape I I_zz global", 77238400.0, global[(2, 2)]);
+        let centroidal_global = poly.centroidal_second_moment_of_area();
+        assert_relative_eq("shape I I_xx centroidal global", 73770624.0, centroidal_global[(0, 0)]);
+        assert_relative_eq("shape I I_yy centroidal global", 3467776.0, centroidal_global[(1, 1)]);
+        assert_relative_eq("shape I I_zz centroidal global", 77238400.0, centroidal_global[(2, 2)]);
     }
 
     #[test]
     fn shape_t_simple_matches_reference_snapshot() {
-        with_epsilon(DEFAULT_EPSILON, || {
-            let shape = ShapeT::new(120.0, 100.0, 12.0, 8.0, 0.0);
-            let poly = shape.to_polygon();
+        let shape = ShapeT::new(120.0, 100.0, 12.0, 8.0, 0.0, 0.0, 0.0);
+        let poly = shape.to_polygon();
 
-            assert_relative_eq("shape T area", 2144.0, poly.area());
-            assert_vec3_almost_eq!(poly.centroid(), Vector3d::new(0.0, 27.582089552238806, 0.0));
+        assert_relative_eq("shape T area", 2144.0, poly.area());
+        assert_vec3_almost_eq!(poly.centroid(), Vector3d::new(0.0, 27.582089552238806, 0.0));
 
-            let local = poly.local_second_moment_of_area();
-            assert_relative_eq("shape T I_xx local", 3284778.6666666665, local[(0, 0)]);
-            assert_relative_eq("shape T I_yy local", 1731754.6666666667, local[(1, 1)]);
-            assert_almost_eq!(local[(0, 1)], 0.0);
-            let centroidal_local = poly.centroidal_local_second_moment_of_area();
-            assert_relative_eq("shape T I_xx centroidal local", 1653684.2189055, centroidal_local[(0, 0)]);
-            assert_relative_eq("shape T I_yy centroidal local", 1731754.6666666667, centroidal_local[(1, 1)]);
-            assert_almost_eq!(centroidal_local[(0, 1)], 0.0);
+        let local = poly.local_second_moment_of_area();
+        assert_relative_eq("shape T I_xx local", 3284778.6666666665, local[(0, 0)]);
+        assert_relative_eq("shape T I_yy local", 1731754.6666666667, local[(1, 1)]);
+        assert_almost_eq!(local[(0, 1)], 0.0);
+        let centroidal_local = poly.centroidal_local_second_moment_of_area();
+        assert_relative_eq("shape T I_xx centroidal local", 1653684.2189055, centroidal_local[(0, 0)]);
+        assert_relative_eq("shape T I_yy centroidal local", 1731754.6666666667, centroidal_local[(1, 1)]);
+        assert_almost_eq!(centroidal_local[(0, 1)], 0.0);
 
-            let principal = poly.local_principal_axes();
-            assert_relative_eq("shape T principal (0,0)", 1.0, principal[(0, 0)]);
-            assert_relative_eq("shape T principal (0,1)", 0.0, principal[(0, 1)]);
-            assert_relative_eq("shape T principal (1,0)", 0.0, principal[(1, 0)]);
-            assert_relative_eq("shape T principal (1,1)", 1.0, principal[(1, 1)]);
+        let principal = poly.local_principal_axes();
+        assert_relative_eq("shape T principal (0,0)", 1.0, principal[(0, 0)]);
+        assert_relative_eq("shape T principal (0,1)", 0.0, principal[(0, 1)]);
+        assert_relative_eq("shape T principal (1,0)", 0.0, principal[(1, 0)]);
+        assert_relative_eq("shape T principal (1,1)", 1.0, principal[(1, 1)]);
 
-            let global = poly.second_moment_of_area();
-            assert_relative_eq("shape T I_xx global", 3284778.6666666665, global[(0, 0)]);
-            assert_relative_eq("shape T I_yy global", 1731754.6666666667, global[(1, 1)]);
-            assert_relative_eq("shape T I_zz global", 5016533.333333333, global[(2, 2)]);
-            let centroidal_global = poly.centroidal_second_moment_of_area();
-            assert_relative_eq("shape T I_xx centroidal global", 1653684.2189055, centroidal_global[(0, 0)]);
-            assert_relative_eq("shape T I_yy centroidal global", 1731754.6666666667, centroidal_global[(1, 1)]);
-            assert_relative_eq("shape T I_zz centroidal global", 3385438.885572, centroidal_global[(2, 2)]);
-        });
+        let global = poly.second_moment_of_area();
+        assert_relative_eq("shape T I_xx global", 3284778.6666666665, global[(0, 0)]);
+        assert_relative_eq("shape T I_yy global", 1731754.6666666667, global[(1, 1)]);
+        assert_relative_eq("shape T I_zz global", 5016533.333333333, global[(2, 2)]);
+        let centroidal_global = poly.centroidal_second_moment_of_area();
+        assert_relative_eq("shape T I_xx centroidal global", 1653684.2189055, centroidal_global[(0, 0)]);
+        assert_relative_eq("shape T I_yy centroidal global", 1731754.6666666667, centroidal_global[(1, 1)]);
+        assert_relative_eq("shape T I_zz centroidal global", 3385438.885572, centroidal_global[(2, 2)]);
     }
 }

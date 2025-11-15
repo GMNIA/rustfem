@@ -1,9 +1,8 @@
-use geometry::{epsilon, set_epsilon, Vector2d, Vector3d, DEFAULT_EPSILON};
+use geometry::{epsilon, Vector2d, Vector3d, DEFAULT_EPSILON};
 use geometry::assert_almost_eq;
 
 #[test]
 fn vector2d_normalization_preserves_direction() {
-    set_epsilon(DEFAULT_EPSILON);
     let v = Vector2d::new(3.0, 4.0);
     let normalized = v.normalize();
 
@@ -14,7 +13,6 @@ fn vector2d_normalization_preserves_direction() {
 
 #[test]
 fn vector3d_cross_produces_perpendicular_vector() {
-    set_epsilon(DEFAULT_EPSILON);
     let a = Vector3d::new(1.0, 0.0, 0.0);
     let b = Vector3d::new(0.0, 1.0, 0.0);
     let cross = a.cross(&b);
@@ -28,17 +26,13 @@ fn vector3d_cross_produces_perpendicular_vector() {
 
 #[test]
 fn epsilon_can_be_configured() {
-    let original = epsilon();
-    set_epsilon(1e-9);
-    assert_eq!(epsilon(), 1e-9);
-    set_epsilon(original);
+    let value = epsilon();
+    assert_eq!(value, DEFAULT_EPSILON);
 }
 
 #[test]
 fn assert_almost_eq_uses_current_epsilon() {
-    set_epsilon(1e-6);
-    assert_almost_eq!(1.0 + 5e-7, 1.0);
-    set_epsilon(DEFAULT_EPSILON);
+    assert_almost_eq!(1.0 + DEFAULT_EPSILON / 2.0, 1.0);
 }
 
 #[test]

@@ -1,4 +1,4 @@
-use geometry::{assert_almost_eq, epsilon, set_epsilon, Axis, Line, Vector3d};
+use geometry::{assert_almost_eq, Axis, Line, Vector3d};
 use geometry::assert_vec3_almost_eq;
 
 #[test]
@@ -55,11 +55,12 @@ fn intersection_behaviour() {
 
 #[test]
 fn epsilon_respected_in_lines() {
-    let original = epsilon();
-    set_epsilon(1e-6);
     let line = Line::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(1e-7, 0.0, 0.0));
-    assert!(line.direction().is_none());
-    set_epsilon(original);
+    // With fixed epsilon, this short line still has a well-defined direction.
+    let dir = line.direction().expect("direction should be defined for short line");
+    assert_almost_eq!(dir.x(), 1.0);
+    assert_almost_eq!(dir.y(), 0.0);
+    assert_almost_eq!(dir.z(), 0.0);
 }
 
 #[test]

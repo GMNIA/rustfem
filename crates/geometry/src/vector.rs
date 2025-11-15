@@ -88,7 +88,7 @@ impl From<(f64, f64, f64)> for Vector3d {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{assert_almost_eq, precision::with_epsilon, DEFAULT_EPSILON};
+    use crate::{assert_almost_eq, DEFAULT_EPSILON};
 
     #[test]
     fn vector2d_dot_matches_expectation() {
@@ -128,11 +128,9 @@ mod tests {
 
     #[test]
     fn vector_is_approx_respects_custom_precision() {
-        with_epsilon(DEFAULT_EPSILON, || {
-            let a = Vector3d::new(0.0, 0.0, 0.0);
-            let b = Vector3d::new(0.0, 0.0, 1e-6);
-            assert!(!a.is_approx(&b, None));
-            assert!(a.is_approx(&b, Some(1e-5)));
-        });
+        let a = Vector3d::new(0.0, 0.0, 0.0);
+        let b = Vector3d::new(0.0, 0.0, 1e-6);
+        assert!(!a.is_approx(&b, None));
+        assert!(a.is_approx(&b, Some(1e-5)));
     }
 }
