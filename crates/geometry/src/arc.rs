@@ -3,7 +3,8 @@ use std::f64::consts::PI;
 use nalgebra::Vector3;
 
 use crate::line::{Line, LineVector};
-use crate::{epsilon, Vector2d, Vector3d};
+use crate::{Vector2d, Vector3d};
+use utils::epsilon;
 
 pub trait ArcVector: LineVector {
     fn to_vec3(&self) -> Vector3<f64>;
@@ -461,7 +462,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::assert_almost_eq;
+    use utils::{assert_almost_eq, assert_vec3_almost_eq};
 
     #[test]
     fn arc_length_matches_radius_times_angle() {
@@ -484,17 +485,17 @@ mod tests {
     fn arc_reverse_swaps_start_end() {
     let mut arc = Arc::<Vector2d>::new(Vector2d::new(0.0, 0.0), Vector2d::new(1.0, 0.0), Vector2d::new(0.0, 1.0), false);
         let reversed = arc.reversed();
-        assert_eq!(reversed.start(), arc.end());
-        assert_eq!(reversed.end(), arc.start());
+        assert_vec3_almost_eq!(reversed.start(), arc.end());
+        assert_vec3_almost_eq!(reversed.end(), arc.start());
         arc.reverse();
-        assert_eq!(arc.start(), reversed.start());
+        assert_vec3_almost_eq!(arc.start(), reversed.start());
     }
 
     #[test]
     fn arc_break_at_splits_arc() {
     let arc = Arc::<Vector3d>::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(1.0, 0.0, 0.0), Vector3d::new(0.0, 1.0, 0.0), false);
         let parts = arc.break_at(0.5);
-        assert_eq!(parts.len(), 2);
+        assert_almost_eq!(parts.len() as f64, 2.0);
         assert_almost_eq!(parts[0].length(), arc.length() / 2.0);
     }
 }

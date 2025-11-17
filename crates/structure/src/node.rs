@@ -1,4 +1,5 @@
-use geometry::{epsilon, Axis, Vector3d};
+use geometry::{Axis, Vector3d};
+use utils::epsilon;
 use nalgebra::{Matrix3, Matrix4, Rotation3, Unit, Vector3};
 
 /// Axis-aligned bounding box helper used by structural entities.
@@ -215,15 +216,16 @@ where
 
 #[cfg(test)]
 mod tests {
-    use geometry::{assert_vec3_almost_eq, Vector3d};
+    use geometry::Vector3d;
+    use utils::{assert_almost_eq, assert_vec3_almost_eq};
 
     use super::{Axis, Node};
 
     #[test]
     fn coordinate_access_and_update() {
         let mut node: Node = (Vector3d::new(0.0, 0.0, 0.0), "origin").into();
-        assert_eq!(node.coord(0), 0.0);
-        assert_eq!(node.coord(1), 0.0);
+        assert_almost_eq!(node.coord(0), 0.0);
+        assert_almost_eq!(node.coord(1), 0.0);
         node.set_coord(0, 1.0);
         node.set_coord(1, -2.0);
         assert_vec3_almost_eq!(node.center(), Vector3d::new(1.0, -2.0, 0.0));

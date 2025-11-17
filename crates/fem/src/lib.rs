@@ -9,6 +9,7 @@ mod tests {
     #[test]
     fn it_works() {
         let result = add(2, 2);
-        assert_eq!(result, 4);
+        let epsilon = 1e-12;
+        assert!((result as f64 - 4.0).abs() <= epsilon);
     }
 }

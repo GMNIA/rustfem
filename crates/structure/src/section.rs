@@ -124,6 +124,7 @@ impl Section {
 #[cfg(test)]
 mod tests {
     use geometry::Vector3d;
+    use utils::{assert_almost_eq, assert_vec3_almost_eq};
 
     use super::*;
     use crate::material::Material;
@@ -144,11 +145,11 @@ mod tests {
         assert!(section.is_generic());
         assert!(section.is_centroidal());
         assert!(!section.is_principal());
-        assert_eq!(section.area(), 0.0);
-        assert_eq!(section.mass(), 0.0);
+        assert_almost_eq!(section.area(), 0.0);
+        assert_almost_eq!(section.mass(), 0.0);
         assert!(section.parts().is_empty());
         assert!(section.section_values().is_empty());
-        assert_eq!(section.simplified(), Vec::<String>::new());
-        assert_eq!(section.centroid(), Vector3d::new(0.0, 0.0, 0.0));
+        assert!(section.simplified().is_empty());
+        assert_vec3_almost_eq!(section.centroid(), Vector3d::new(0.0, 0.0, 0.0));
     }
 }

@@ -1,4 +1,5 @@
-use geometry::{assert_almost_eq, Arc, Line, Vector2d, Vector3d};
+use geometry::{Arc, Line, Vector2d, Vector3d};
+use utils::{assert_almost_eq, assert_vec3_almost_eq};
 use std::f64::consts::PI;
 
 #[test]
@@ -14,11 +15,11 @@ fn arc2d_basic_properties() {
 fn arc_break_and_reverse_behaviour() {
     let arc = Arc::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(1.0, 0.0, 0.0), Vector3d::new(0.0, 1.0, 0.0), false);
     let pieces = arc.break_at(0.5);
-    assert_eq!(pieces.len(), 2);
+    assert_almost_eq!(pieces.len() as f64, 2.0);
     assert_almost_eq!(pieces[0].length(), arc.length() / 2.0);
     let reversed = arc.reversed();
-    assert_eq!(reversed.start(), arc.end());
-    assert_eq!(reversed.end(), arc.start());
+    assert_vec3_almost_eq!(reversed.start(), arc.end());
+    assert_vec3_almost_eq!(reversed.end(), arc.start());
 }
 
 #[test]
@@ -42,7 +43,7 @@ fn arc_line_intersection_filters_points_on_arc() {
     );
     let line = Line::new(Vector3d::new(0.0, 0.5, 0.0), Vector3d::new(1.0, 0.5, 0.0));
     let intersections = arc.intersection_with_line(&line, false);
-    assert_eq!(intersections.len(), 1);
+    assert_almost_eq!(intersections.len() as f64, 1.0);
     assert!(arc.contains(&intersections[0]));
 }
 
@@ -61,7 +62,7 @@ fn arc_from_three_points_recovers_arc() {
 fn arc_linearized_returns_segments() {
     let arc = Arc::new(Vector2d::new(0.0, 0.0), Vector2d::new(1.0, 0.0), Vector2d::new(0.0, 1.0), false);
     let segments = arc.linearized(4);
-    assert_eq!(segments.len(), 4);
+    assert_almost_eq!(segments.len() as f64, 4.0);
     assert_almost_eq!(segments[0].start().x(), 1.0);
     assert_almost_eq!(segments.last().unwrap().end().y(), 1.0);
 }
@@ -153,10 +154,10 @@ fn arc3d_intersection_with_line() {
     );
     let line = Line::new(Vector3d::new(-1.0, 0.0, 0.0), Vector3d::new(2.0, 0.0, 0.0));
     let hits = arc.intersection_with_line(&line, false);
-    assert_eq!(hits.len(), 1);
+    assert_almost_eq!(hits.len() as f64, 1.0);
     assert!(arc.contains(&hits[0]));
     let ray_hits = arc.intersection_with_line(&line, true);
-    assert_eq!(ray_hits.len(), 2);
+    assert_almost_eq!(ray_hits.len() as f64, 2.0);
 }
 
 #[test]
@@ -174,7 +175,7 @@ fn arc3d_intersection_with_arc() {
         false,
     );
     let intersections = arc1.intersection_with_arc(&arc2);
-    assert_eq!(intersections.len(), 1);
+    assert_almost_eq!(intersections.len() as f64, 1.0);
     assert!(arc1.contains(&intersections[0]));
     assert!(arc2.contains(&intersections[0]));
 }
@@ -189,7 +190,7 @@ fn arc3d_break_at_point() {
     );
     let point = arc.point_at(0.3);
     let segments = arc.break_at_point(&point);
-    assert_eq!(segments.len(), 2);
+    assert_almost_eq!(segments.len() as f64, 2.0);
     assert!(segments.iter().all(|seg| seg.contains(&point)));
     assert_almost_eq!(segments[0].length() + segments[1].length(), arc.length());
 }

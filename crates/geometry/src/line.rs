@@ -1,4 +1,5 @@
-use crate::{epsilon, Vector2d, Vector3d};
+use crate::{Vector2d, Vector3d};
+use utils::epsilon;
 
 /// Canonical coordinate axes for 3D space.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -465,7 +466,7 @@ impl LocalAxis {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{assert_almost_eq, DEFAULT_EPSILON};
+    use utils::{assert_almost_eq, DEFAULT_EPSILON};
 
     #[test]
     fn line_length_and_direction_2d() {
@@ -524,7 +525,7 @@ mod tests {
     fn break_at_parameter() {
     let line = Line::<Vector3d>::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(0.0, 0.0, 10.0));
         let pieces = line.break_at(0.5);
-        assert_eq!(pieces.len(), 2);
+        assert_almost_eq!(pieces.len() as f64, 2.0);
         assert_almost_eq!(pieces[0].length(), 5.0);
         assert_almost_eq!(pieces[1].length(), 5.0);
     }

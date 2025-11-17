@@ -1,4 +1,5 @@
-use geometry::{assert_almost_eq, Edge, Vector2d, Vector3d};
+use geometry::{Edge, Vector2d, Vector3d};
+use utils::{assert_almost_eq, assert_vec3_almost_eq};
 
 #[test]
 fn edge2d_basic_behaviour() {
@@ -13,7 +14,7 @@ fn edge2d_basic_behaviour() {
 fn edge_break_and_intersection() {
     let edge = Edge::new(Vector2d::new(0.0, 0.0), Vector2d::new(4.0, 4.0));
     let parts = edge.break_at(0.5);
-    assert_eq!(parts.len(), 2);
+    assert_almost_eq!(parts.len() as f64, 2.0);
     // Use a 3D edge to test intersection with a 3D line
     let edge3 = Edge::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(4.0, 4.0, 0.0));
     let _diag = geometry::Line::new(Vector3d::new(0.0, 4.0, 0.0), Vector3d::new(4.0, 0.0, 0.0));
@@ -30,8 +31,8 @@ fn edge_tangents_swap_on_reverse() {
         Vector3d::new(0.0, 1.0, 0.0),
     );
     edge.reverse();
-    assert_eq!(edge.start_tangent().unwrap(), Vector3d::new(0.0, 1.0, 0.0));
-    assert_eq!(edge.end_tangent().unwrap(), Vector3d::new(1.0, 0.0, 0.0));
+    assert_vec3_almost_eq!(edge.start_tangent().unwrap(), Vector3d::new(0.0, 1.0, 0.0));
+    assert_vec3_almost_eq!(edge.end_tangent().unwrap(), Vector3d::new(1.0, 0.0, 0.0));
 }
 
 #[test]
@@ -52,6 +53,6 @@ fn edge_closest_point_matches_point_at() {
     let point = Vector3d::new(0.0, 0.0, 3.0);
     let closest = edge.closest_point(&point);
     let expected = edge.point_at(0.3);
-    assert_eq!(closest, expected);
+    assert_vec3_almost_eq!(closest, expected);
     assert_almost_eq!(edge.length_at_point(&point), 3.0);
 }

@@ -59,18 +59,19 @@ impl Material {
 
 #[cfg(test)]
 mod tests {
+    use utils::assert_almost_eq;
     use super::*;
 
     #[test]
     fn shear_modulus_matches_isotropic_formula() {
         let material = Material::new(210e9, 0.3, 7850.0, 78.5, 1.2e-5, 0.2, Some("S355".into()));
         let shear = material.shear_modulus();
-        assert!((shear - 80_769_230_769.23077).abs() < 1e-6);
+        assert_almost_eq!(shear, 80_769_230_769.23077);
     }
 
     #[test]
     fn stress_scales_with_strain() {
         let material = Material::new(210e9, 0.3, 7850.0, 78.5, 1.2e-5, 0.2, Some("S355".into()));
-        assert_eq!(material.stress(1e-3), 210_000_000.0);
+        assert_almost_eq!(material.stress(1e-3), 210_000_000.0);
     }
 }

@@ -1,6 +1,4 @@
 use geometry::{
-    assert_almost_eq,
-    assert_vec3_almost_eq,
     Disk,
     Rectangle,
     Shape,
@@ -10,6 +8,7 @@ use geometry::{
     ShapeT,
     Vector3d,
 };
+use utils::{assert_almost_eq, assert_vec3_almost_eq};
 use std::f64::consts::PI;
 
 fn relative_error(expected: f64, actual: f64) -> f64 {

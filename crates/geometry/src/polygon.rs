@@ -2,7 +2,8 @@ use nalgebra::{Matrix2, Matrix3, Vector3};
 
 use crate::arc::ArcVector;
 use crate::line::{Axis, Line, LocalAxis};
-use crate::{epsilon, Vector3d};
+use crate::Vector3d;
+use utils::epsilon;
 #[cfg(test)]
 use crate::Vector2d;
 
@@ -570,7 +571,8 @@ fn point_on_segment_2d(p: Vector3<f64>, a: Vector3<f64>, b: Vector3<f64>) -> boo
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{assert_almost_eq, Line};
+    use crate::Line;
+    use utils::assert_almost_eq;
     use crate::Polygon as Polygon3d;
 
     #[test]
@@ -629,7 +631,7 @@ mod tests {
         ]);
         let line = Line::new(Vector3d::new(0.5, 0.5, -1.0), Vector3d::new(0.5, 0.5, 1.0));
         let hits = poly.intersection_with_line(&line, false);
-        assert_eq!(hits.len(), 1);
+        assert_almost_eq!(hits.len() as f64, 1.0);
         assert!(poly.contains(&hits[0]));
         assert!(hits[0].is_approx(&Vector3d::new(0.5, 0.5, 0.0), None));
     }

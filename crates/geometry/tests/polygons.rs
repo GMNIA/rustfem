@@ -1,4 +1,5 @@
-use geometry::{assert_almost_eq, Axis, Line, Polygon, Vector2d, Vector3d};
+use geometry::{Axis, Line, Polygon, Vector2d, Vector3d};
+use utils::assert_almost_eq;
 
 #[test]
 fn square_xy_metrics_axes_and_contains() {
@@ -44,7 +45,7 @@ fn polygon_line_intersection_and_transforms() {
 
     let line = Line::new(Vector3d::new(0.5, 0.5, -2.0), Vector3d::new(0.5, 0.5, 2.0));
     let hits = poly.intersection_with_line(&line, false);
-    assert_eq!(hits.len(), 1);
+    assert_almost_eq!(hits.len() as f64, 1.0);
     let p = hits[0];
     assert_almost_eq!(p.x(), 0.5);
     assert_almost_eq!(p.y(), 0.5);

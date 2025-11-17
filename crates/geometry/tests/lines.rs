@@ -1,5 +1,5 @@
-use geometry::{assert_almost_eq, Axis, Line, Vector3d};
-use geometry::assert_vec3_almost_eq;
+use geometry::{Axis, Line, Vector3d};
+use utils::{assert_almost_eq, assert_vec3_almost_eq};
 
 #[test]
 fn line2d_basic_properties() {
@@ -28,7 +28,7 @@ fn line3d_distance_and_projection() {
 fn line_break_and_reverse() {
     let line = Line::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(2.0, 0.0, 0.0));
     let segments = line.break_at(0.5);
-    assert_eq!(segments.len(), 2);
+    assert_almost_eq!(segments.len() as f64, 2.0);
     assert_almost_eq!(segments[0].length(), 1.0);
     assert_almost_eq!(segments[1].length(), 1.0);
 
@@ -86,8 +86,8 @@ fn start_and_end_accessors() {
     let start = Vector3d::new(1.0, 2.0, 3.0);
     let end = Vector3d::new(4.0, 5.0, 6.0);
     let line = Line::new(start, end);
-    assert_eq!(line.start(), start);
-    assert_eq!(line.end(), end);
+    assert_vec3_almost_eq!(line.start(), start);
+    assert_vec3_almost_eq!(line.end(), end);
 }
 
 #[test]
@@ -104,7 +104,7 @@ fn break_at_point_splits_line() {
     let line = Line::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(0.0, 0.0, 10.0));
     let split_point = Vector3d::new(0.0, 0.0, 2.5);
     let segments = line.break_at_point(&split_point);
-    assert_eq!(segments.len(), 2);
+    assert_almost_eq!(segments.len() as f64, 2.0);
     assert_almost_eq!(segments[0].end().z(), 2.5);
     assert_almost_eq!(segments[1].start().z(), 2.5);
 }
@@ -132,7 +132,7 @@ fn reversed_returns_new_line_without_mutating_original() {
 fn break_at_out_of_range_returns_original() {
     let line = Line::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(5.0, 0.0, 0.0));
     let segments = line.break_at(1.5);
-    assert_eq!(segments.len(), 1);
+    assert_almost_eq!(segments.len() as f64, 1.0);
     assert_almost_eq!(segments[0].length(), 5.0);
 }
 

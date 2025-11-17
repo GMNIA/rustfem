@@ -1,5 +1,6 @@
 use crate::line::{Line, LineVector};
-use crate::epsilon;
+use utils::epsilon;
+
 #[cfg(test)]
 use crate::{Vector2d, Vector3d};
 
@@ -149,7 +150,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::assert_almost_eq;
+    use utils::{assert_almost_eq, assert_vec3_almost_eq};
 
     #[test]
     fn edge_length_and_point_at() {
@@ -164,7 +165,7 @@ mod tests {
     fn edge_break_and_reverse() {
     let edge = Edge::<Vector3d>::new(Vector3d::new(0.0, 0.0, 0.0), Vector3d::new(0.0, 0.0, 10.0));
         let segments = edge.break_at(0.25);
-        assert_eq!(segments.len(), 2);
+        assert_almost_eq!(segments.len() as f64, 2.0);
         assert_almost_eq!(segments[0].length(), 2.5);
         assert_almost_eq!(segments[1].length(), 7.5);
 
@@ -172,8 +173,8 @@ mod tests {
         mutable.set_start_tangent(Vector3d::new(1.0, 0.0, 0.0));
         mutable.set_end_tangent(Vector3d::new(0.0, 1.0, 0.0));
         mutable.reverse();
-        assert_eq!(mutable.start_tangent().unwrap(), Vector3d::new(0.0, 1.0, 0.0));
-        assert_eq!(mutable.end_tangent().unwrap(), Vector3d::new(1.0, 0.0, 0.0));
+        assert_vec3_almost_eq!(mutable.start_tangent().unwrap(), Vector3d::new(0.0, 1.0, 0.0));
+        assert_vec3_almost_eq!(mutable.end_tangent().unwrap(), Vector3d::new(1.0, 0.0, 0.0));
     }
 
     #[test]

@@ -1,6 +1,7 @@
 use std::f64::consts::{FRAC_PI_2, FRAC_PI_4};
 
-use geometry::{assert_almost_eq, assert_vec3_almost_eq, Axis, Line3d, Vector3d};
+use geometry::{Axis, Line3d, Vector3d};
+use utils::{approx_eq, assert_almost_eq, assert_vec3_almost_eq};
 use nalgebra::{Matrix3, Rotation3};
 use structure::{BoundingBox3d, Material, Member, Node, Section};
 
@@ -93,9 +94,8 @@ fn rotation_matrix_matches_expected_orientation() {
 
     for row in 0..3 {
         for col in 0..3 {
-            assert_almost_eq!(
-                rotation[(row, col)],
-                expected[(row, col)],
+            assert!(
+                approx_eq!(rotation[(row, col)], expected[(row, col)]),
                 "rotation entry ({}, {}) mismatch: {} vs {}",
                 row,
                 col,
@@ -153,13 +153,13 @@ fn rotate_refreshes_mesh_nodes_for_all_input_forms() {
 
     member.rotate(0.0, [0.0, 0.0, 1.0]);
     let mesh = member.mesh_nodes();
-    assert_eq!(mesh.len(), 2);
+    assert_almost_eq!(mesh.len() as f64, 2.0);
     assert_vec3_almost_eq!(mesh[0], member.start_node().center());
     assert_vec3_almost_eq!(mesh[1], member.end_node().center());
 
     member.rotate(std::f64::consts::FRAC_PI_2, Vector3d::new(0.0, 0.0, 1.0));
     let mesh = member.mesh_nodes();
-    assert_eq!(mesh.len(), 2);
+    assert_almost_eq!(mesh.len() as f64, 2.0);
     assert_vec3_almost_eq!(mesh[0], member.start_node().center());
     assert_vec3_almost_eq!(mesh[1], member.end_node().center());
 }

@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 geometry = { path = "../geometry" }
 nalgebra = { version = "0.34", default-features = true }
+utils = { path = "../utils" }
