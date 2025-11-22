@@ -1,61 +1,15 @@
-use geometry::{Axis, Line3d, Vector3d};
-use utils::epsilon;
-use nalgebra::{Matrix3, Matrix4, Rotation3, Unit};
+use std::ops::{Deref, DerefMut};
 
 use crate::{
-    node::{BoundingBox3d, Node},
+    linearelement::{Fixity, LinearElement},
+    node::Node,
     section::Section,
 };
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Fixity {
-    translations: [bool; 3],
-    rotations: [bool; 3],
-}
-
-impl Fixity {
-    pub fn fixed() -> Self {
-        Self { translations: [true; 3], rotations: [true; 3] }
-    }
-
-    pub fn pinned() -> Self {
-        Self { translations: [true; 3], rotations: [false; 3] }
-    }
-
-    pub fn free() -> Self {
-        Self { translations: [false; 3], rotations: [false; 3] }
-    }
-}
-
-impl Default for Fixity {
-    fn default() -> Self {
-        Self::free()
-    }
-}
-
-pub trait IntoVec3 {
-    fn into_vec3(self) -> Vector3d;
-}
-
-impl IntoVec3 for Vector3d {
-    fn into_vec3(self) -> Vector3d { self }
-}
-
-impl IntoVec3 for [f64; 3] {
-    fn into_vec3(self) -> Vector3d { Vector3d::new(self[0], self[1], self[2]) }
-}
-
-impl IntoVec3 for (f64, f64, f64) {
-    fn into_vec3(self) -> Vector3d { Vector3d::new(self.0, self.1, self.2) }
-}
-
-/// Beam or cable member connecting two nodes.
+/// Beam formed by two nodes enriched with section related metadata.
 #[derive(Debug, Clone)]
-pub struct Member {
-    name: Option<String>,
-    start_node: Node,
-    end_node: Node,
-    line: Line3d,
+pub struct Beam {
+    element: LinearElement,
     section: Option<Section>,
     section_rotation: Option<f64>,
     init_tension: Option<f64>,
@@ -63,20 +17,12 @@ pub struct Member {
     device: Option<String>,
     start_fixity: Option<Fixity>,
     end_fixity: Option<Fixity>,
-    mesh_nodes: Vec<Vector3d>,
-    mesh: Vec<Line3d>,
 }
 
-impl Member {
+impl Beam {
     pub fn new(start_node: Node, end_node: Node) -> Self {
-        let start_center = start_node.center();
-        let end_center = end_node.center();
-        let line = Line3d::new(start_center, end_center);
-        let mut member = Self {
-            name: None,
-            start_node,
-            end_node,
-            line,
+        Self {
+            element: LinearElement::new(start_node, end_node),
             section: None,
             section_rotation: None,
             init_tension: None,
@@ -84,34 +30,11 @@ impl Member {
             device: None,
             start_fixity: None,
             end_fixity: None,
-            mesh_nodes: Vec::new(),
-            mesh: Vec::new(),
-        };
-        member.refresh_endpoints();
-        member
-    }
-
-    pub fn from_points<S, E>(start: S, end: E, section: Option<Section>) -> Self
-    where
-        S: Into<Vector3d>,
-        E: Into<Vector3d>,
-    {
-        let start_node = Node::new(start.into());
-        let end_node = Node::new(end.into());
-        let mut member = Self::new(start_node, end_node);
-        if let Some(section) = section {
-            member.section = Some(section);
         }
-        member
     }
 
-    pub fn from_positions<S, E>(start: S, end: E) -> Self
-    where
-        S: Into<Vector3d>,
-        E: Into<Vector3d>,
-    {
-        Self::from_points(start, end, None)
-    }
+    pub fn linear_element(&self) -> &LinearElement { &self.element }
+    pub fn linear_element_mut(&mut self) -> &mut LinearElement { &mut self.element }
 
     pub fn set_section(&mut self, section: Section) {
         self.section = Some(section);
@@ -207,190 +130,241 @@ impl Member {
         self.end_fixity.as_ref()
     }
 
-    pub fn set_name<S: Into<String>>(&mut self, name: S) {
-        self.name = Some(name.into());
-    }
-
-    pub fn clear_name(&mut self) {
-        self.name = None;
-    }
-
-    pub fn get_name(&self) -> Option<&str> {
-        self.name.as_deref()
-    }
-
-    fn refresh_endpoints(&mut self) {
-        if self.mesh_nodes.is_empty() {
-            self.mesh_nodes.push(self.start_node.center());
-            self.mesh_nodes.push(self.end_node.center());
-        } else {
-            if let Some(first) = self.mesh_nodes.first_mut() {
-                *first = self.start_node.center();
-            }
-            if let Some(last) = self.mesh_nodes.last_mut() {
-                *last = self.end_node.center();
-            }
-        }
-        self.line.set_endpoints(self.start_node.center(), self.end_node.center());
-    }
-
-    pub fn start_node(&self) -> &Node { &self.start_node }
-    pub fn end_node(&self) -> &Node { &self.end_node }
     pub fn get_section_rotation_value(&self) -> f64 { self.section_rotation.unwrap_or(0.0) }
     pub fn get_init_tension_value(&self) -> f64 { self.init_tension.unwrap_or(0.0) }
     pub fn get_is_cable_value(&self) -> bool { self.is_cable.unwrap_or(false) }
     pub fn get_device_value(&self) -> &str { self.device.as_deref().unwrap_or("") }
     pub fn get_start_fixity_value(&self) -> Fixity { self.start_fixity.clone().unwrap_or_default() }
     pub fn get_end_fixity_value(&self) -> Fixity { self.end_fixity.clone().unwrap_or_default() }
-    pub fn mesh_nodes(&self) -> &[Vector3d] { &self.mesh_nodes }
-    pub fn mesh(&self) -> &[Line3d] { &self.mesh }
-
-    pub fn add_mesh_node(&mut self, node: Vector3d) {
-        self.mesh_nodes.push(node);
-    }
-
-    pub fn add_mesh_segment(&mut self, line: Line3d) {
-        self.mesh.push(line);
-    }
-
-    pub fn center(&self) -> Vector3d {
-        Vector3d((self.start_node.center().0 + self.end_node.center().0) / 2.0)
-    }
-
-    pub fn length(&self) -> f64 {
-        (self.end_node.center().0 - self.start_node.center().0).norm()
-    }
-
-    fn orientation(&self) -> Rotation3<f64> {
-        self.line
-            .rotation_matrix()
-            .map(Rotation3::from_matrix_unchecked)
-            .unwrap_or_else(Rotation3::identity)
-    }
-
-    pub fn direction(&self, axis: Axis) -> Vector3d {
-        let rotated = self.orientation() * axis.to_vector3d().0;
-        Vector3d(rotated)
-    }
-
-    pub fn rotation_matrix(&self) -> Matrix3<f64> {
-        *self.orientation().matrix()
-    }
-
-    pub fn transformation_matrix(&self) -> Matrix4<f64> {
-        let mut matrix = Matrix4::identity();
-        matrix.fixed_view_mut::<3, 3>(0, 0).copy_from(self.orientation().matrix());
-        let center = self.center();
-        matrix[(0, 3)] = center.x();
-        matrix[(1, 3)] = center.y();
-        matrix[(2, 3)] = center.z();
-        matrix
-    }
-
-    pub fn to_line(&self) -> Line3d { self.line }
-
-    pub fn bounding_box(&self) -> BoundingBox3d {
-        let mut bbox = BoundingBox3d::from_point(self.start_node.center());
-        bbox.expand_with_point(self.end_node.center());
-        bbox
-    }
-
-    pub fn rotate<A: IntoVec3>(&mut self, angle: f64, axis: A) {
-        let axis_vec = axis.into_vec3().0;
-        let unit_axis = match Unit::try_new(axis_vec, epsilon()) {
-            Some(axis) => axis,
-            None => return,
-        };
-        let incremental = Rotation3::from_axis_angle(&unit_axis, angle);
-
-        self.line.rotate(angle, [axis_vec.x, axis_vec.y, axis_vec.z]);
-
-        let center = self.center().0;
-        for node in [&mut self.start_node, &mut self.end_node] {
-            let relative = node.center().0 - center;
-            node.set_center(Vector3d(incremental * relative + center));
-            node.apply_rotation(&incremental);
-        }
-        self.refresh_endpoints();
-    }
-
-    pub fn r#move<T: IntoVec3>(&mut self, offset: T) {
-        let offset_vec = offset.into_vec3();
-        self.line.r#move(offset_vec);
-        for node in [&mut self.start_node, &mut self.end_node] {
-            node.move_global(offset_vec);
-        }
-        self.refresh_endpoints();
-    }
-
-    pub fn move_by(&mut self, local_offset: Vector3d) {
-        let rotation = self.orientation();
-        let global = rotation * local_offset.0;
-        self.r#move(Vector3d(global));
-    }
-
-    pub fn move_global<T: IntoVec3>(&mut self, global_offset: T) {
-        self.r#move(global_offset);
-    }
-
-    pub fn to_global(&self, local: Vector3d) -> Vector3d {
-        let rotated = self.orientation() * local.0;
-        Vector3d(rotated + self.center().0)
-    }
-
-    pub fn to_local(&self, global: Vector3d) -> Vector3d {
-        let diff = global.0 - self.center().0;
-        Vector3d(self.orientation().inverse() * diff)
-    }
 }
 
-impl<S, E> From<(S, E)> for Member
-where
-    S: Into<Vector3d>,
-    E: Into<Vector3d>,
-{
-    fn from(value: (S, E)) -> Self {
-        Self::from_points(value.0, value.1, None)
-    }
-}
-
-impl From<(Node, Node, Section)> for Member {
+impl From<(Node, Node, Section)> for Beam {
     fn from((start, end, section): (Node, Node, Section)) -> Self {
-        let mut member = Member::new(start, end);
-        member.set_section(section);
-        member
+        let mut beam = Beam::new(start, end);
+        beam.set_section(section);
+        beam
     }
 }
 
-impl<S, E> From<(S, E, Section)> for Member
-where
-    S: Into<Vector3d>,
-    E: Into<Vector3d>,
-{
-    fn from(value: (S, E, Section)) -> Self {
-        Self::from_points(value.0, value.1, Some(value.2))
-    }
+impl Deref for Beam {
+    type Target = LinearElement;
+
+    fn deref(&self) -> &Self::Target { &self.element }
 }
 
-impl<S, E> From<(S, E, Option<Section>)> for Member
-where
-    S: Into<Vector3d>,
-    E: Into<Vector3d>,
-{
-    fn from(value: (S, E, Option<Section>)) -> Self {
-        Self::from_points(value.0, value.1, value.2)
-    }
+impl DerefMut for Beam {
+    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.element }
 }
 
 #[cfg(test)]
 mod tests {
-    use geometry::Vector3d;
-    use utils::{assert_almost_eq, assert_vec3_almost_eq};
+    use std::f64::consts::{FRAC_PI_2, FRAC_PI_4};
+
+    use geometry::{Axis, Line3d, Vector3d};
+    use nalgebra::{Matrix3, Rotation3};
+    use utils::{approx_eq, assert_almost_eq, assert_vec3_almost_eq};
 
     use super::*;
-    use crate::{
-        material::Material,
-        section::Section,
-    };
+    use crate::{material::Material, section::Section, BoundingBox3d};
 
+    fn beam_from_coords(start: (f64, f64, f64), end: (f64, f64, f64)) -> Beam {
+        Beam::new(Node::new(start), Node::new(end))
+    }
+
+    #[test]
+    fn direction_returns_member_local_axes_in_global_space() {
+        let beam = beam_from_coords((0.0, 0.0, 0.0), (2.0, 2.0, 0.0));
+
+        let axis_x = beam.direction(Axis::AxisX);
+        let magnitude = (2.0_f64).sqrt();
+        assert_vec3_almost_eq!(axis_x, Vector3d::new(1.0 / magnitude, 1.0 / magnitude, 0.0));
+
+        let axis_y = beam.direction(Axis::AxisY);
+        assert_vec3_almost_eq!(axis_y, Vector3d::new(-1.0 / magnitude, 1.0 / magnitude, 0.0));
+
+        let axis_z = beam.direction(Axis::AxisZ);
+        assert_vec3_almost_eq!(axis_z, Vector3d::new(0.0, 0.0, 1.0));
+    }
+
+    #[test]
+    fn axis_basis_is_orthonormal() {
+        let beam = beam_from_coords((0.0, 0.0, 0.0), (3.0, 0.5, 0.0));
+
+        let x_axis = beam.direction(Axis::AxisX);
+        let y_axis = beam.direction(Axis::AxisY);
+        let z_axis = beam.direction(Axis::AxisZ);
+
+        assert_almost_eq!(x_axis.dot(&y_axis), 0.0);
+        assert_almost_eq!(x_axis.dot(&z_axis), 0.0);
+        assert_almost_eq!(y_axis.dot(&z_axis), 0.0);
+
+        assert_vec3_almost_eq!(x_axis.cross(&y_axis), z_axis);
+    }
+
+    #[test]
+    fn bounding_box_spans_beam_endpoints() {
+        let beam = beam_from_coords((-1.0, 2.0, -0.5), (4.0, -3.0, 1.5));
+
+        let bbox: BoundingBox3d = beam.bounding_box();
+        assert_vec3_almost_eq!(bbox.min(), Vector3d::new(-1.0, -3.0, -0.5));
+        assert_vec3_almost_eq!(bbox.max(), Vector3d::new(4.0, 2.0, 1.5));
+    }
+
+    #[test]
+    fn align_axis_respects_section_rotation() {
+        let mut beam = beam_from_coords((0.0, 0.0, 0.0), (2.0, 0.0, 0.0));
+        let material = Material::new(210e9, 0.3, 8.0, 78.5, 1.2e-5, 0.2, None);
+        let section = Section::generic(material, None);
+        beam.set_section(section);
+        beam.set_section_rotation(FRAC_PI_2);
+
+        let axis_x = beam.direction(Axis::AxisX);
+        assert_vec3_almost_eq!(axis_x, Vector3d::new(1.0, 0.0, 0.0));
+
+        let axis_y = beam.direction(Axis::AxisY);
+        assert_vec3_almost_eq!(axis_y, Vector3d::new(0.0, 1.0, 0.0));
+
+        let axis_z = beam.direction(Axis::AxisZ);
+        assert_vec3_almost_eq!(axis_z, Vector3d::new(0.0, 0.0, 1.0));
+        assert_almost_eq!(beam.get_section_rotation_value(), FRAC_PI_2);
+    }
+
+    #[test]
+    fn rotate_updates_node_positions_and_orientation() {
+        let mut beam = beam_from_coords((0.0, 0.0, 0.0), (2.0, 0.0, 0.0));
+        beam.rotate(FRAC_PI_2, [0.0, 0.0, 1.0]);
+
+        assert_vec3_almost_eq!(beam.start_node().center(), Vector3d::new(1.0, -1.0, 0.0));
+        assert_vec3_almost_eq!(beam.end_node().center(), Vector3d::new(1.0, 1.0, 0.0));
+
+        let axis_x = beam.direction(Axis::AxisX);
+        assert_vec3_almost_eq!(axis_x, Vector3d::new(0.0, 1.0, 0.0));
+    }
+
+    #[test]
+    fn rotation_matrix_matches_expected_orientation() {
+        let mut beam = beam_from_coords((0.0, 0.0, 0.0), (1.0, 1.0, 0.0));
+        let material = Material::new(210e9, 0.3, 8.0, 78.5, 1.2e-5, 0.2, None);
+        let section = Section::generic(material, None);
+        beam.set_section(section);
+        beam.set_section_rotation(FRAC_PI_4);
+
+        let rotation = beam.rotation_matrix();
+        let base_line = Line3d::new(beam.start_node().center(), beam.end_node().center());
+        let local_axis = base_line.local_axis().expect("local axis defined");
+        let col_x = local_axis.direction(Axis::AxisX).0;
+        let col_y = local_axis.direction(Axis::AxisY).0;
+        let col_z = local_axis.direction(Axis::AxisZ).0;
+        let base = Rotation3::from_matrix_unchecked(Matrix3::from_columns(&[col_x, col_y, col_z]));
+        let expected = base;
+
+        for row in 0..3 {
+            for col in 0..3 {
+                assert!(
+                    approx_eq!(rotation[(row, col)], expected[(row, col)]),
+                    "rotation entry ({}, {}) mismatch: {} vs {}",
+                    row,
+                    col,
+                    rotation[(row, col)],
+                    expected[(row, col)]
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn move_updates_nodes_and_line() {
+        let mut beam = Beam::new(
+            Node::new(Vector3d::new(0.0, 0.0, 0.0)),
+            Node::new(Vector3d::new(1.0, 0.0, 0.0)),
+        );
+
+        beam.r#move([1.0, 0.0, 0.0]);
+        assert_vec3_almost_eq!(beam.start_node().center(), Vector3d::new(1.0, 0.0, 0.0));
+        assert_vec3_almost_eq!(beam.end_node().center(), Vector3d::new(2.0, 0.0, 0.0));
+
+        beam.move_global(Vector3d::new(0.0, -2.0, 0.0));
+        assert_vec3_almost_eq!(beam.start_node().center(), Vector3d::new(1.0, -2.0, 0.0));
+        assert_vec3_almost_eq!(beam.end_node().center(), Vector3d::new(2.0, -2.0, 0.0));
+
+        let line = beam.to_line();
+        assert_vec3_almost_eq!(line.start(), beam.start_node().center());
+        assert_vec3_almost_eq!(line.end(), beam.end_node().center());
+    }
+
+    #[test]
+    fn beam_from_nodes_can_assign_section_directly() {
+        let start = Node::new(Vector3d::new(0.0, 0.0, 0.0));
+        let end = Node::new(Vector3d::new(2.0, 0.0, 0.0));
+        let mut beam = Beam::new(start.clone(), end.clone());
+        let material = Material::new(210e9, 0.3, 8.0, 78.5, 1.2e-5, 0.2, None);
+        let section = Section::generic(material, Some("Custom".into()));
+
+        beam.section = Some(section.clone());
+
+        assert_eq!(beam.start_node(), &start);
+        assert_eq!(beam.end_node(), &end);
+        assert_eq!(beam.get_section(), Some(&section));
+    }
+
+    #[test]
+    fn beam_with_nodes_and_section_tracks_metadata() {
+        let start = Node::new(Vector3d::new(0.0, 0.0, 0.0));
+        let end = Node::new(Vector3d::new(1.0, 2.0, 0.0));
+        let material = Material::new(210e9, 0.3, 8.0, 78.5, 1.2e-5, 0.2, Some("Steel".into()));
+        let mut beam = Beam::new(start, end);
+        let section = Section::generic(material, None);
+
+        beam.set_section(section.clone());
+        beam.set_init_tension(12.5);
+        beam.set_section_rotation(FRAC_PI_4);
+        beam.set_is_cable(true);
+
+        assert_eq!(beam.get_section(), Some(&section));
+        assert_almost_eq!(beam.get_init_tension_value(), 12.5);
+        assert_almost_eq!(beam.get_section_rotation_value(), FRAC_PI_4);
+        assert!(beam.get_is_cable().unwrap());
+    }
+
+    #[test]
+    fn move_accepts_list_and_vector_inputs() {
+        let original_start = Vector3d::new(0.0, 0.0, 0.0);
+        let original_end = Vector3d::new(2.0, 0.0, 0.0);
+        let mut beam = Beam::new(Node::new(original_start), Node::new(original_end));
+
+        beam.r#move([0.5, 1.0, -0.5]);
+        assert_vec3_almost_eq!(beam.start_node().center(), Vector3d::new(0.5, 1.0, -0.5));
+        assert_vec3_almost_eq!(beam.end_node().center(), Vector3d::new(2.5, 1.0, -0.5));
+
+        beam.r#move(Vector3d::new(-0.5, -1.0, 0.5));
+        assert_vec3_almost_eq!(beam.start_node().center(), original_start);
+        assert_vec3_almost_eq!(beam.end_node().center(), original_end);
+    }
+
+    #[test]
+    fn to_global_transforms_local_point() {
+        let beam = beam_from_coords((0.0, 0.0, 0.0), (2.0, 2.0, 0.0));
+        let global = beam.to_global(Vector3d::new(1.0, 0.0, 0.0));
+        let offset = (2.0_f64).sqrt() / 2.0;
+        assert_vec3_almost_eq!(global, Vector3d::new(1.0 + offset, 1.0 + offset, 0.0));
+    }
+
+    #[test]
+    fn to_local_is_inverse_of_to_global() {
+        let beam = beam_from_coords((0.0, 0.0, 0.0), (2.0, 2.0, 0.0));
+        let offset = (2.0_f64).sqrt() / 2.0;
+        let point = Vector3d::new(1.0 + offset, 1.0 + offset, 0.0);
+
+        let local = beam.to_local(point);
+        assert_vec3_almost_eq!(local, Vector3d::new(1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn to_line_returns_segment_between_nodes() {
+        let beam = beam_from_coords((-1.0, 0.5, 0.0), (3.0, -0.5, 0.0));
+        let line: Line3d = beam.to_line();
+
+        assert_vec3_almost_eq!(line.start(), beam.start_node().center());
+        assert_vec3_almost_eq!(line.end(), beam.end_node().center());
+    }
 }
